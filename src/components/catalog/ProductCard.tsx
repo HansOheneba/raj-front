@@ -31,7 +31,7 @@ export function ProductCard({
               src={product.imageUrls[0]}
               alt=""
               fill
-              sizes="(min-width: 1280px) 18vw, (min-width: 1024px) 22vw, (min-width: 640px) 30vw, 45vw"
+              sizes="(min-width: 1280px) 18vw, (min-width: 1024px) 22vw, (min-width: 640px) 30vw, 68vw"
               priority={priority}
               className="object-cover hover-zoom"
             />

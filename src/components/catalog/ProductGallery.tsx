@@ -50,7 +50,7 @@ export function ProductGallery({ images, name }: { images: string[]; name: strin
         </div>
       )}
 
-      <div className="relative min-w-0 flex-1">
+      <div className="min-w-0 flex-1">
         <div
           ref={scrollerRef}
           onScroll={syncActive}
@@ -75,8 +75,8 @@ export function ProductGallery({ images, name }: { images: string[]; name: strin
         </div>
 
         {showThumbs && (
-          <div className="absolute inset-x-0 bottom-3 flex justify-center lg:hidden">
-            <div className="flex items-center gap-0.5 rounded-full bg-ivory/80 px-1 py-0.5 backdrop-blur-sm">
+          <div className="mt-2.5 flex justify-center lg:hidden">
+            <div className="flex items-center">
               {images.map((_, index) => (
                 <button
                   key={index}
