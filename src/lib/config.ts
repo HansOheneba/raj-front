@@ -8,7 +8,6 @@ export const siteConfig = {
   currency: "GHS",
   locale: "en-GH",
   freeShippingThreshold: 350,
-  shippingFee: 25,
   deliveryNote: "Delivery takes about 72 working hours.",
   contact: {
     email: "hello@rajkollections.com",

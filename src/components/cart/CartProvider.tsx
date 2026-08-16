@@ -152,7 +152,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
       return sum;
     }, 0);
     const qualifiesForFreeShipping = subtotal >= siteConfig.freeShippingThreshold;
-    const shipping = lines.length === 0 || qualifiesForFreeShipping ? 0 : siteConfig.shippingFee;
 
     return {
       ready,
@@ -160,8 +159,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       count: lines.reduce((sum, line) => sum + line.quantity, 0),
       subtotal,
       savings,
-      shipping,
-      total: subtotal + shipping,
+      shipping: 0,
+      total: subtotal,
       qualifiesForFreeShipping,
       amountToFreeShipping: Math.max(0, siteConfig.freeShippingThreshold - subtotal),
       addedSignal,

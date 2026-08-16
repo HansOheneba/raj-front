@@ -1,29 +1,46 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 export function ProductGallery({ images, name }: { images: string[]; name: string }) {
   const [active, setActive] = useState(0);
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const showThumbs = images.length > 1;
 
   useEffect(() => {
     setActive(0);
+    scrollerRef.current?.scrollTo({ left: 0 });
   }, [images]);
 
+  const syncActive = useCallback(() => {
+    const el = scrollerRef.current;
+    if (!el || el.clientWidth === 0) return;
+    const index = Math.round(el.scrollLeft / el.clientWidth);
+    setActive(Math.min(images.length - 1, Math.max(0, index)));
+  }, [images.length]);
+
+  const goTo = (index: number) => {
+    setActive(index);
+    const el = scrollerRef.current;
+    if (!el) return;
+    el.scrollTo({ left: index * el.clientWidth, behavior: "smooth" });
+  };
+
   return (
-    <div className="flex w-full flex-col-reverse gap-3 self-start sm:flex-row">
-      {images.length > 1 && (
-        <div className="no-rail flex gap-2 overflow-x-auto sm:w-16 sm:flex-col sm:overflow-visible">
+    <div className="flex w-full flex-col gap-3 self-start lg:flex-row">
+      {showThumbs && (
+        <div className="no-rail hidden gap-2 lg:flex lg:w-16 lg:flex-col">
           {images.map((image, index) => (
             <button
               key={image}
               type="button"
-              onClick={() => setActive(index)}
+              onClick={() => goTo(index)}
               aria-label={`View image ${index + 1} of ${images.length}`}
               aria-current={index === active}
               className={cn(
-                "relative aspect-square w-14 shrink-0 overflow-hidden rounded-md border transition-[border-color] duration-[var(--duration-ui)] ease-[var(--ease-out)] sm:w-full",
+                "relative aspect-square w-full shrink-0 overflow-hidden rounded-md border transition-[border-color] duration-[var(--duration-ui)] ease-[var(--ease-out)]",
                 index === active ? "border-clay" : "border-line hover:border-line-strong",
               )}
             >
@@ -33,21 +50,53 @@ export function ProductGallery({ images, name }: { images: string[]; name: strin
         </div>
       )}
 
-      <div className="relative aspect-square flex-1 overflow-hidden rounded-md border border-line bg-cream">
-        {images.map((image, index) => (
-          <Image
-            key={image}
-            src={image}
-            alt={index === 0 ? name : `${name}, view ${index + 1}`}
-            fill
-            priority={index === 0}
-            sizes="(min-width: 1024px) 50vw, 100vw"
-            className={cn(
-              "object-cover transition-opacity duration-[var(--duration-ui)] ease-[var(--ease-out)]",
-              index === active ? "opacity-100" : "opacity-0",
-            )}
-          />
-        ))}
+      <div className="relative min-w-0 flex-1">
+        <div
+          ref={scrollerRef}
+          onScroll={syncActive}
+          className="no-rail flex snap-x snap-mandatory touch-pan-x overflow-x-auto overscroll-x-contain rounded-md border border-line bg-cream"
+        >
+          {images.map((image, index) => (
+            <div
+              key={image}
+              className="relative aspect-square min-w-full shrink-0 snap-start basis-full"
+            >
+              <Image
+                src={image}
+                alt={index === 0 ? name : `${name}, view ${index + 1}`}
+                fill
+                priority={index === 0}
+                draggable={false}
+                sizes="(min-width: 1024px) 50vw, 100vw"
+                className="object-cover"
+              />
+            </div>
+          ))}
+        </div>
+
+        {showThumbs && (
+          <div className="absolute inset-x-0 bottom-3 flex justify-center lg:hidden">
+            <div className="flex items-center gap-0.5 rounded-full bg-ivory/80 px-1 py-0.5 backdrop-blur-sm">
+              {images.map((_, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => goTo(index)}
+                  aria-label={`View image ${index + 1} of ${images.length}`}
+                  aria-current={index === active}
+                  className="flex h-6 w-6 items-center justify-center"
+                >
+                  <span
+                    className={cn(
+                      "h-1.5 w-1.5 rounded-full transition-[background-color] duration-[var(--duration-ui)] ease-[var(--ease-out)]",
+                      index === active ? "bg-ink" : "bg-ink/30",
+                    )}
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -17,7 +17,6 @@ export function OrderSummary({
   const {
     subtotal,
     savings,
-    shipping,
     total,
     count,
     qualifiesForFreeShipping,
@@ -37,7 +36,7 @@ export function OrderSummary({
         )}
         <Row
           label="Delivery"
-          value={qualifiesForFreeShipping ? "Free" : formatPrice(shipping)}
+          value={qualifiesForFreeShipping ? "Free in Accra" : "Based on location"}
           accent={qualifiesForFreeShipping ? "clay" : undefined}
         />
       </dl>
@@ -56,7 +55,7 @@ export function OrderSummary({
             />
           </div>
           <p className="mt-2 text-[11px] text-ink-muted">
-            Add {formatPrice(amountToFreeShipping)} for free delivery.
+            Add {formatPrice(amountToFreeShipping)} for free Accra delivery.
           </p>
         </div>
       )}
