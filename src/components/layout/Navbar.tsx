@@ -43,20 +43,7 @@ export function Navbar({ departments }: { departments: Department[] }) {
 
       <header className="sticky top-0 z-50 border-b border-line bg-ivory/85 backdrop-blur-md">
         <div className="shell flex h-14 items-center justify-between gap-4">
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={() => setMenuOpen(true)}
-              aria-label="Open menu"
-              aria-expanded={menuOpen}
-              aria-controls="mobile-nav"
-              className="-ml-2 flex h-8 w-8 items-center justify-center rounded-md text-ink-muted transition-colors duration-[var(--duration-ui)] ease-[var(--ease-out)] hover:bg-sand hover:text-ink md:hidden"
-            >
-              <Menu size={17} strokeWidth={1.5} />
-            </button>
-
-            <BrandLogo className="h-9" size={36} priority />
-          </div>
+          <BrandLogo className="h-9" size={36} priority />
 
           <nav className="hidden items-center gap-1 md:flex">
             <Link
@@ -120,6 +107,17 @@ export function Navbar({ departments }: { departments: Department[] }) {
                 </span>
               )}
             </Link>
+
+            <button
+              type="button"
+              onClick={() => setMenuOpen(true)}
+              aria-label="Open menu"
+              aria-expanded={menuOpen}
+              aria-controls="mobile-nav"
+              className="-mr-2 flex h-8 w-8 items-center justify-center rounded-md text-ink-muted transition-colors duration-[var(--duration-ui)] ease-[var(--ease-out)] hover:bg-sand hover:text-ink md:hidden"
+            >
+              <Menu size={17} strokeWidth={1.5} />
+            </button>
           </div>
         </div>
       </header>

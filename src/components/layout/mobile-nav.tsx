@@ -20,7 +20,7 @@ import {
   type AnimationPlaybackControls,
   type MotionValue,
 } from "framer-motion";
-import { ChevronRight, X } from "lucide-react";
+import { ChevronRight, Info, MessageCircle, X } from "lucide-react";
 import { BrandLogo } from "./BrandLogo";
 import { cn } from "@/lib/utils";
 import type { Department } from "@/lib/catalog";
@@ -206,7 +206,7 @@ function PresentingSurface({
     }
 
     surface.style.willChange = "transform";
-    surface.style.transform = `translateX(${OPEN_SHIFT * value}px) scale(${1 - (1 - OPEN_SCALE) * value})`;
+    surface.style.transform = `translateX(${-OPEN_SHIFT * value}px) scale(${1 - (1 - OPEN_SCALE) * value})`;
     surface.style.borderRadius = `${OPEN_RADIUS * value}px`;
     surface.style.overflow = "hidden";
     surface.style.boxShadow = `0 12px 40px rgba(31, 27, 24, ${0.28 * value})`;
@@ -304,7 +304,7 @@ function MobileNavSheet({
     }
 
     panel.style.opacity = "1";
-    panel.style.transform = `translateX(${(value - 1) * 100}%)`;
+    panel.style.transform = `translateX(${(1 - value) * 100}%)`;
   });
 
   useEffect(() => {
@@ -351,7 +351,7 @@ function MobileNavSheet({
     const now = performance.now();
     samples.current.push({ x: event.clientX, t: now });
     samples.current = samples.current.filter((sample) => now - sample.t < 80);
-    progress.set(clampDrag(session.startProgress + dx / session.width, session.width));
+    progress.set(clampDrag(session.startProgress - dx / session.width, session.width));
   };
 
   const endDrag = (event: ReactPointerEvent<HTMLElement>) => {
@@ -363,7 +363,7 @@ function MobileNavSheet({
       const velocity = readVelocity(samples.current) / session.width;
       const projected = progress.get() + project(velocity);
       const flicked = Math.abs(readVelocity(samples.current)) > FLICK_PX;
-      const target: 0 | 1 = flicked ? (velocity < 0 ? 0 : 1) : projected < 0.5 ? 0 : 1;
+      const target: 0 | 1 = flicked ? (velocity > 0 ? 0 : 1) : projected < 0.5 ? 0 : 1;
       springTo(target, velocity);
     }
 
@@ -389,14 +389,13 @@ function MobileNavSheet({
         didDrag.current = false;
       }}
       className={cn(
-        "fixed inset-y-0 left-0 z-50 flex w-[min(20rem,calc(100vw-4.5rem))] flex-col border-r border-white/40 bg-sand/80 shadow-lift backdrop-blur-[40px] backdrop-saturate-150 [@media(prefers-reduced-transparency:reduce)]:bg-sand [@media(prefers-reduced-transparency:reduce)]:backdrop-blur-none md:hidden",
-        "pt-[max(0.5rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] pl-[max(0px,env(safe-area-inset-left))]",
+        "fixed inset-y-0 right-0 z-50 flex w-[min(20rem,calc(100vw-4.5rem))] flex-col border-l border-white/40 bg-sand/80 shadow-lift backdrop-blur-[40px] backdrop-saturate-150 [@media(prefers-reduced-transparency:reduce)]:bg-sand [@media(prefers-reduced-transparency:reduce)]:backdrop-blur-none md:hidden",
+        "pt-[max(0.5rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] pr-[max(0px,env(safe-area-inset-right))]",
         open ? "pointer-events-auto" : "pointer-events-none",
       )}
-      style={{ transform: "translateX(-100%)" }}
+      style={{ transform: "translateX(100%)" }}
     >
       <header className="flex items-center justify-between px-4 pb-3">
-        <BrandLogo className="h-9" size={36} />
         <button
           ref={closeRef}
           type="button"
@@ -408,9 +407,10 @@ function MobileNavSheet({
             <X size={15} strokeWidth={2} />
           </span>
         </button>
+        <BrandLogo className="h-9" size={36} />
       </header>
 
-      <nav className="no-rail flex-1 overflow-y-auto overscroll-contain px-4 pb-4">
+      <nav className="no-rail flex-1 overflow-y-auto overscroll-contain px-4">
         <p className="px-1 pb-2 text-[13px] text-ink-faint">Shop</p>
         <NavGroup>
           <NavRow href="/shop" active={pathname.startsWith("/shop") && !roots.some((department) => pathname === `/shop/${department.slug}`)}>
@@ -426,18 +426,16 @@ function MobileNavSheet({
             </NavRow>
           ))}
         </NavGroup>
-
-        <div className="mt-4">
-          <NavGroup>
-            <NavRow href="/about" active={pathname === "/about"}>
-              About
-            </NavRow>
-            <NavRow href="/contact" active={pathname === "/contact"}>
-              Support
-            </NavRow>
-          </NavGroup>
-        </div>
       </nav>
+
+      <div className="flex gap-2 px-4 pt-3">
+        <UtilityLink href="/about" label="About" active={pathname === "/about"}>
+          <Info size={20} strokeWidth={1.5} />
+        </UtilityLink>
+        <UtilityLink href="/contact" label="Support" active={pathname === "/contact"}>
+          <MessageCircle size={20} strokeWidth={1.5} />
+        </UtilityLink>
+      </div>
     </aside>
   );
 }
@@ -465,6 +463,31 @@ function NavRow({
     >
       <span>{children}</span>
       <ChevronRight size={18} strokeWidth={1.75} className="text-ink-faint" />
+    </Link>
+  );
+}
+
+function UtilityLink({
+  href,
+  label,
+  active,
+  children,
+}: {
+  href: string;
+  label: string;
+  active: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className={cn(
+        "flex flex-1 flex-col items-center gap-1.5 rounded-[10px] bg-cream py-3 text-ink-muted active:scale-[0.97] active:bg-sand",
+        active && "bg-sand text-ink",
+      )}
+    >
+      {children}
+      <span className="text-[11px] font-medium tracking-wide">{label}</span>
     </Link>
   );
 }
