@@ -51,7 +51,7 @@ export function CheckoutForm() {
         </span>
         <h2 className="text-xl">Order received</h2>
         <p className="mt-2 text-[13px] leading-relaxed text-ink-muted">
-          Payment is handled by the admin Hubtel flow. Keep your reference for support.
+          We&apos;ve received your order. Keep your reference if you need support.
         </p>
         <dl className="mt-5 flex flex-col gap-2 border-y border-line py-3 text-left text-[13px]">
           <div className="flex justify-between gap-3">
@@ -125,7 +125,7 @@ export function CheckoutForm() {
     <form onSubmit={submit} className="grid gap-10 lg:grid-cols-[1fr_320px]">
       <div className="flex flex-col gap-3.5">
         <p className="text-[13px] text-ink-muted">
-          {count} items. Payment runs on the admin Hubtel integration when it is live.
+          {count} {count === 1 ? "item" : "items"}.
         </p>
         <Field label="Full name" htmlFor="name" required>
           <Input id="name" name="name" required autoComplete="name" />

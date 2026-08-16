@@ -4,7 +4,7 @@ import { CheckoutForm } from "@/components/checkout/CheckoutForm";
 
 export const metadata: Metadata = {
   title: "Checkout",
-  description: "Delivery details for your Raj Kollections order. Payment is processed via the admin Hubtel flow.",
+  description: "Secure checkout. We don't store your payment information.",
 };
 
 export default function CheckoutPage() {
@@ -19,7 +19,7 @@ export default function CheckoutPage() {
       />
       <h1 className="mt-4 text-2xl sm:text-[1.75rem]">Checkout</h1>
       <p className="mt-1.5 text-[13px] text-ink-muted">
-        Enter delivery details. Charging happens on the admin side when Hubtel is connected.
+        Enter your delivery details. Secure checkout. We don&apos;t store your payment information.
       </p>
       <div className="mt-8">
         <CheckoutForm />

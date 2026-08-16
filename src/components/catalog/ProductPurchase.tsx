@@ -17,7 +17,7 @@ import { siteConfig } from "@/lib/config";
 const perks = [
   { icon: Truck, text: siteConfig.deliveryNote },
   { icon: RotateCcw, text: "Unopened returns accepted for 14 days" },
-  { icon: ShieldCheck, text: "Genuine product, sourced directly" },
+  { icon: ShieldCheck, text: "We don't store your payment information." },
 ];
 
 export function ProductPurchase({

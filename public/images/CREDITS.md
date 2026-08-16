@@ -3,7 +3,7 @@
 Photography sourced via [Openverse](https://openverse.org) from StockSnap, the
 WordPress Photo Directory and Nappy, under Creative Commons / public domain terms.
 
-Replace these files with your own product shots before going live — keep the
+Replace these files with your own product shots before going live. Keep the
 filenames and no code changes are needed. Regenerate with:
 
 ```bash

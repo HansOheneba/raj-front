@@ -36,7 +36,7 @@ export async function createOrder(_input: CreateOrderInput): Promise<CreateOrder
   if (!adminUrl) {
     return {
       ok: false,
-      message: "Checkout is not connected yet. The admin API will take this order and charge via Hubtel.",
+      message: "Checkout is temporarily unavailable. Try again shortly, or message us for help.",
     };
   }
 

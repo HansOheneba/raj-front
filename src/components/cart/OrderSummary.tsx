@@ -56,7 +56,7 @@ export function OrderSummary({
             />
           </div>
           <p className="mt-2 text-[11px] text-ink-muted">
-            Add {formatPrice(amountToFreeShipping)} for complimentary delivery.
+            Add {formatPrice(amountToFreeShipping)} for free delivery.
           </p>
         </div>
       )}

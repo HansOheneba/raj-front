@@ -1,9 +1,9 @@
 export const siteConfig = {
   name: "RAJ KOLLECTIONS",
   shortName: "Raj",
-  tagline: "Hard-to-find goods, made easy.",
+  tagline: "Everyday essentials, and a little more.",
   description:
-    "Raj Kollections. UK and US goods you won't easily find on Accra shelves, delivered across the city.",
+    "Everyday essentials, beauty, fashion and hard-to-find favourites. Shop from anywhere in Ghana.",
   url: "https://rajkollections.example",
   currency: "GHS",
   locale: "en-GH",

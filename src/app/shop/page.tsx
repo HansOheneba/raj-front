@@ -9,7 +9,7 @@ import { parseShopParams, type RawSearchParams } from "@/lib/searchParams";
 
 export const metadata: Metadata = {
   title: "Shop",
-  description: "Shop Raj Kollections. Genuine goods, ready to order.",
+  description: "Browse everyday essentials, beauty, fashion and hard-to-find favourites.",
 };
 
 export default async function ShopPage({

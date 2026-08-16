@@ -10,8 +10,8 @@ import { siteConfig } from "@/lib/config";
 
 const assurances = [
   { icon: Clock, label: siteConfig.deliveryNote },
-  { icon: MapPin, label: "Delivery across Greater Accra" },
-  { icon: ShieldCheck, label: "Real support, real people" },
+  { icon: MapPin, label: "Shop from anywhere in Ghana" },
+  { icon: ShieldCheck, label: "Secure checkout" },
 ];
 
 export default async function HomePage() {
@@ -31,12 +31,13 @@ export default async function HomePage() {
     <>
       <section className="shell grid gap-10 py-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,400px)] lg:items-center lg:gap-16 lg:py-16">
         <div className="min-w-0">
-          <p className="label-xs text-clay">Accra · Genuine imports</p>
+          <p className="label-xs text-clay">Ghana · Genuine products</p>
           <h1 className="mt-3 text-[2rem] sm:text-[2.5rem] lg:text-[2.75rem]">
             Shop what you came for.
           </h1>
           <p className="mt-4 max-w-md text-[13px] leading-relaxed text-ink-muted">
-            The UK and US goods most Accra shelves don&apos;t carry, stocked close to home.
+            Stock up on the essentials, then stay a little longer for the things you
+            didn&apos;t come looking for.
           </p>
           <div className="mt-6 flex items-center gap-4">
             <Button asChild>

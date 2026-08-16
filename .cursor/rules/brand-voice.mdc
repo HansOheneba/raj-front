@@ -1,45 +1,362 @@
 ---
-description: Brand voice for Raj Kollections. Convenience and authenticity that inspire trust, not a desperate hard sell.
+description: Brand voice and copywriting rules for Raj Kollections. Write natural, confident retail copy that communicates trust, convenience, product quality and discovery without sounding generic, corporate or overly promotional.
 alwaysApply: true
 ---
 
-# Brand voice
+# Raj Kollections Brand Voice
 
-Raj Kollections stocks a wide range (pantry, beauty, fashion, household). Range is a fact, not the personality.
+Raj Kollections is a modern retail store in Ghana offering a broad mix of groceries, pantry essentials, beauty, fashion, household products, accessories and other everyday goods.
 
-**The real differentiator:** these are UK and US goods most Accra/Ghana supermarkets don't stock — the biscuits, drinks, and everyday brands people know from abroad but can't easily find locally. That's the value, not "we sell everything." Lead with *hard to find here*, not just *genuine* or *imported*.
+The range is broad, but the brand should never feel scattered.
 
-**Position:** a trusted, convenient place with the imports most shelves skip. Being a one-stop shop is fine — it's *how* we say it that matters.
+A key strength of Raj Kollections is its access to genuine UK, US and international products, including familiar favourites and products that customers may not easily come across elsewhere. This should create a sense of discovery and value without making competitors the subject of our marketing.
 
-**Feelings to create:** trust, ease, authenticity, competence. Never doubt, hustle, or "they'll sell me anything."
+Raj Kollections serves customers nationwide. Never position the brand as Accra-only.
 
-We are not a jack of all trades hustling every item in stock. We are the place that already has it, genuinely sourced, close to home.
+## Brand personality
 
-## Do
+Raj Kollections should feel:
 
-- Lead with the shopper's need, then the product. One job per surface.
-- Say "genuine" / "authentic" when talking about sourcing — that's our trust wedge, not "UK and USA goods" recited like a customs form.
-- Convenience can be implied confidently ("shop what you came for," "stocked close to home") without spelling out logistics as a selling point.
-- Name categories when they aid finding things (nav, search, department pages). Do not parade the full catalogue as proof of worth.
-- State an operational fact once, in the place a shopper needs it (checkout, support, footer fine print) — not repeated as a headline or trust badge on every surface.
+- Trustworthy
+- Modern
+- Convenient
+- Confident
+- Familiar
+- Welcoming
+- Well-curated
+- Human
 
-## Do not
+The customer should feel:
 
-- Restate obvious operational facts as if they were brand copy: "priced in Ghana cedis," "checkout in the app," "WhatsApp is support only" — shoppers assume these; stating them reads defensive, not reassuring.
-- Explain what a channel is *not* for ("not for placing the order," "not for collecting the order by hand"). Say what it *is* for, once, somewhere useful.
-- "One-stop shop," "we sell everything," "from rice to designer shoes" as a flex, or listing many unrelated categories in one headline to sound impressive.
-- Urgency, hard sell, "while stocks last" energy unless it is a real operational fact.
-- Legalistic hedging words like "strictly" — they read like fine print, not confidence.
+"I can trust this store."
+"They have good stuff here."
+"I might find something I haven't seen elsewhere."
+"I can get what I need without making things complicated."
+"I can shop here from anywhere in Ghana."
 
-## Copy pattern
+Never make the customer feel pressured, rushed or talked down to.
 
-```
-❌ UK and USA goods, priced in Ghana cedis. Checkout in the app. WhatsApp is support only.
-❌ WhatsApp is for support, not orders.
-❌ We sell rice, oil, snacks, lotions, bags, shoes, fragrance and more.
-✅ The UK and US goods most Accra shelves don't carry, stocked close to home.
-✅ Real support, real people.
-✅ Shop what you came for.
-```
+---
 
-Hero, metadata, about, empty states, emails, and admin-facing customer copy follow this. If a line reads like fine print or a warning, or could be said by someone desperate to close any sale, rewrite it.
+# Core positioning
+
+Raj Kollections is not defined by simply selling many different categories.
+
+The brand is about making a good range of genuine, useful and interesting products easier to find and shop.
+
+Use ideas such as:
+
+- Everyday essentials, and a little more.
+- The things you need. The things you didn't know you were looking for.
+- Everyday shopping, made easier.
+- Good finds, all in one place.
+- Essentials, favourites and everything in between.
+- More of what you love, closer than you think.
+- Genuine products. Great finds. Easy shopping.
+
+These are directions, not mandatory slogans. Do not repeat the same phrase throughout the website.
+
+---
+
+# How to talk about international products
+
+UK, US and international sourcing is an advantage, but it should never sound like a customs declaration.
+
+Do not repeatedly say:
+"UK and USA goods"
+"Imported products"
+"Products not available in Accra"
+"Products other supermarkets don't stock"
+
+Do not criticize or compare ourselves directly against other stores.
+
+Instead, communicate the benefit:
+
+- Hard-to-find favourites
+- International favourites
+- Genuine products from trusted brands
+- Familiar products from abroad
+- Products worth discovering
+- A selection you may not find everywhere
+
+Use "genuine" or "authentic" when it is relevant to building trust.
+
+Do not make "imported" the personality of the brand.
+
+---
+
+# Nationwide positioning
+
+Raj Kollections serves customers across Ghana.
+
+Do not write copy that implies we only serve Accra.
+
+Avoid:
+"Your Accra shop"
+"Close to home in Accra"
+"Accra's..."
+"Available around Accra"
+
+Unless the specific page is actually about a physical Accra location.
+
+When communicating convenience, use language that works nationally:
+
+- Shop from anywhere in Ghana.
+- Delivered to you.
+- Your everyday shopping, wherever you are.
+- What you need, wherever you are in Ghana.
+
+Do not overemphasize delivery unless the page is specifically about delivery.
+
+---
+
+# Customer-facing copy vs implementation details
+
+Always distinguish between what the customer needs to know and how the system works behind the scenes.
+
+Never expose internal implementation details in marketing or customer-facing copy.
+
+Do NOT say:
+- "Hubtel handles your payment"
+- "Payments are processed by Hubtel"
+- "Checkout is powered by..."
+- "Orders are managed through..."
+- "WhatsApp is support only"
+- "The website uses..."
+- "Your payment goes through..."
+- "Our backend..."
+
+Instead, communicate the customer benefit:
+
+- Secure checkout
+- Secure payments
+- Easy checkout
+- Reliable delivery
+- Real support when you need it
+- Easy order tracking
+
+Only mention a specific payment provider, technology or operational system when the customer genuinely needs to know it.
+
+---
+
+# Write for humans
+
+Never write generic AI marketing copy.
+
+Avoid phrases such as:
+
+- "Discover..."
+- "Elevate your..."
+- "Your one-stop destination..."
+- "Something for everyone..."
+- "Quality products at unbeatable prices"
+- "Experience the difference"
+- "Shop with confidence"
+- "We are committed to..."
+- "Seamlessly..."
+- "Curated selection..."
+- "At Raj Kollections, we believe..."
+- "From X to Y and everything in between"
+- "We've got you covered"
+
+These phrases are not banned because they are grammatically wrong. They are discouraged because they are overused and make the brand sound interchangeable with thousands of other businesses.
+
+If a sentence could be placed on another retailer's website without changing anything, rewrite it.
+
+---
+
+# Be specific
+
+Prefer concrete statements over empty adjectives.
+
+❌ "We offer an exceptional shopping experience."
+
+✅ "Find everyday essentials, beauty, fashion and hard-to-find favourites in one place."
+
+❌ "We are committed to bringing you the best products."
+
+✅ "From pantry staples to international favourites, our shelves are stocked with products worth coming back for."
+
+❌ "Shop our wide range of quality products."
+
+✅ "Stock up on the essentials, then stay a little longer for the things you didn't come looking for."
+
+---
+
+# Headlines
+
+Every headline should have a purpose.
+
+A headline should communicate at least one of:
+
+- What Raj Kollections offers
+- Why the customer should care
+- A useful benefit
+- A distinctive brand idea
+- A specific promotion
+- A reason to explore
+
+Do not make headlines vague simply to sound premium.
+
+❌ "Shopping, Reimagined."
+
+❌ "More Than Just Shopping."
+
+❌ "Where Quality Meets Convenience."
+
+Prefer:
+
+✅ "Everyday essentials. Great finds."
+
+✅ "Stock up on what you need. Discover something new."
+
+✅ "The products you know. A few you haven't met yet."
+
+The exact wording should change depending on the page and context.
+
+---
+
+# Do not explain obvious things
+
+Customers do not need an explanation of how ordinary website features work.
+
+Do not write:
+
+"Checkout securely using our payment system."
+
+Say:
+
+"Secure checkout."
+
+Do not write:
+
+"Use our WhatsApp number if you need help with your order."
+
+Say:
+
+"Need a hand? We're on WhatsApp."
+
+Do not write:
+
+"Your order will be delivered to the address you provide."
+
+Say:
+
+"Delivered to your door."
+
+Explain operational details only when they are necessary for the customer to successfully complete an action.
+
+---
+
+# Tone
+
+Write like a confident retailer, not a salesperson begging for the sale.
+
+Use short and natural sentences.
+
+Be warm without being overly enthusiastic.
+
+Be confident without making exaggerated claims.
+
+Be persuasive through clarity rather than pressure.
+
+Avoid excessive exclamation marks.
+
+Do not use em dashes. Use a period, comma, or a hyphen for ranges.
+
+Avoid fake urgency.
+
+Avoid "Don't miss out!" unless there is a genuine limited-time offer.
+
+Avoid making every section sound like an advertisement.
+
+Some copy should simply help the customer navigate the store.
+
+---
+
+# Product and category copy
+
+Category copy should help customers understand what they will find.
+
+Do not turn every category description into marketing copy.
+
+For example:
+
+❌ "Indulge in our incredible selection of premium beauty products designed to elevate your everyday routine."
+
+✅ "Skincare, body care, fragrance and beauty essentials from brands you know and love."
+
+Product descriptions should prioritize:
+
+1. What the product is
+2. Why it is useful
+3. Important details
+4. A natural reason to consider it
+
+Never invent product benefits, origins, ingredients, certifications or claims that have not been provided.
+
+---
+
+# Website UX copy
+
+Navigation, buttons, forms, empty states and checkout copy should prioritize clarity.
+
+Use:
+
+- Shop now
+- Add to cart
+- View product
+- Continue shopping
+- Checkout
+- Search products
+- Browse categories
+- Track order
+- Get help
+
+Do not turn simple interface elements into marketing slogans.
+
+❌ "Start Your Shopping Journey"
+
+✅ "Start shopping"
+
+❌ "Discover Your Next Favourite"
+
+✅ "Browse products"
+
+---
+
+# Trust
+
+Trust should be communicated through facts and calm language.
+
+Good:
+- Genuine products
+- Secure checkout
+- Reliable delivery
+- Easy returns
+- Real customer support
+
+Do not repeatedly tell customers that Raj Kollections is trustworthy.
+
+Let the experience and specific facts establish trust.
+
+---
+
+# Final copy test
+
+Before returning any copy, ask:
+
+1. Does this sound like a real retailer wrote it?
+2. Is it saying something useful or distinctive?
+3. Am I explaining something the customer already understands?
+4. Am I exposing an internal implementation detail?
+5. Does this accidentally make Raj Kollections sound Accra-only?
+6. Am I unnecessarily comparing us with competitors?
+7. Does this sound desperate to make a sale?
+8. Could another generic retailer use this exact sentence?
+9. Is there a simpler way to say it?
+10. Does the copy fit the specific page rather than just describing the whole business?
+
+If the copy fails any of these tests, rewrite it before presenting it.
+
+Never use generic filler simply because a section needs text.

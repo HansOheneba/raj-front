@@ -8,7 +8,7 @@ import { siteConfig } from "@/lib/config";
 
 export const metadata: Metadata = {
   title: "Support",
-  description: "Raj Kollections support. WhatsApp and phone for questions. Place orders in the shop.",
+  description: "Need a hand? We're on WhatsApp.",
 };
 
 export default function ContactPage() {
@@ -21,8 +21,8 @@ export default function ContactPage() {
         <SectionHeading
           as="h1"
           eyebrow="Support"
-          title="Questions only"
-          description="Place orders in the shop. Use WhatsApp or this form if you need help with a product or an existing order."
+          title="Need a hand?"
+          description="We're on WhatsApp, or send a message here."
         />
       </div>
 

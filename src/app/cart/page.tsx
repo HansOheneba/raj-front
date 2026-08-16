@@ -4,7 +4,7 @@ import { CartView } from "@/components/cart/CartView";
 
 export const metadata: Metadata = {
   title: "Your cart",
-  description: "Review the items in your RAJ KOLLECTIONS basket before checking out.",
+  description: "Your Raj Kollections cart.",
 };
 
 export default function CartPage() {
