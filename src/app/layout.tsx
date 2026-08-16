@@ -3,6 +3,7 @@ import { Archivo, Saira } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/components/cart/CartProvider";
 import { Footer } from "@/components/layout/Footer";
+import { StoreShell } from "@/components/layout/mobile-nav";
 import { Navbar } from "@/components/layout/Navbar";
 import { listDepartments } from "@/lib/catalog";
 import { siteConfig } from "@/lib/config";
@@ -39,11 +40,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang="en" className={`${archivo.variable} ${saira.variable}`}>
-      <body className="flex min-h-dvh flex-col font-sans">
+      <body className="min-h-dvh font-sans">
         <CartProvider>
-          <Navbar departments={departments} />
-          <main className="flex-1">{children}</main>
-          <Footer departments={departments} />
+          <StoreShell
+            departments={departments}
+            navbar={<Navbar departments={departments} />}
+            footer={<Footer departments={departments} />}
+          >
+            {children}
+          </StoreShell>
         </CartProvider>
       </body>
     </html>

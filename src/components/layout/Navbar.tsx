@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Menu, Search, ShoppingBag, X } from "lucide-react";
+import { Menu, Search, ShoppingBag } from "lucide-react";
 import { BrandLogo } from "./BrandLogo";
 import { SearchDialog } from "./SearchDialog";
+import { useMobileNav } from "./mobile-nav";
 import { useCart } from "@/components/cart/CartProvider";
 import { siteConfig } from "@/lib/config";
 import { cn, formatPrice } from "@/lib/utils";
@@ -14,14 +15,10 @@ import type { Department } from "@/lib/catalog";
 export function Navbar({ departments }: { departments: Department[] }) {
   const pathname = usePathname();
   const { count, ready, addedSignal } = useCart();
+  const { open: menuOpen, setOpen: setMenuOpen } = useMobileNav();
   const [searchOpen, setSearchOpen] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [bump, setBump] = useState(false);
   const roots = departments.filter((department) => department.parentId === null);
-
-  useEffect(() => {
-    setMenuOpen(false);
-  }, [pathname]);
 
   useEffect(() => {
     if (addedSignal === 0) return;
@@ -49,12 +46,13 @@ export function Navbar({ departments }: { departments: Department[] }) {
           <div className="flex items-center gap-1">
             <button
               type="button"
-              onClick={() => setMenuOpen((open) => !open)}
-              aria-label={menuOpen ? "Close menu" : "Open menu"}
+              onClick={() => setMenuOpen(true)}
+              aria-label="Open menu"
               aria-expanded={menuOpen}
+              aria-controls="mobile-nav"
               className="-ml-2 flex h-8 w-8 items-center justify-center rounded-md text-ink-muted transition-colors duration-[var(--duration-ui)] ease-[var(--ease-out)] hover:bg-sand hover:text-ink md:hidden"
             >
-              {menuOpen ? <X size={17} strokeWidth={1.5} /> : <Menu size={17} strokeWidth={1.5} />}
+              <Menu size={17} strokeWidth={1.5} />
             </button>
 
             <BrandLogo className="h-9" size={36} priority />
@@ -124,33 +122,6 @@ export function Navbar({ departments }: { departments: Department[] }) {
             </Link>
           </div>
         </div>
-
-        {menuOpen && (
-          <div className="border-t border-line bg-cream md:hidden">
-            <nav className="shell flex flex-col py-2">
-              <Link href="/shop" className="label-sm py-2.5 text-ink">
-                All products
-              </Link>
-              <div className="grid grid-cols-2 gap-x-4 border-y border-line py-1">
-                {roots.map((department) => (
-                  <Link
-                    key={department.id}
-                    href={`/shop/${department.slug}`}
-                    className="py-1.5 text-[13px] text-ink-muted"
-                  >
-                    {department.name}
-                  </Link>
-                ))}
-              </div>
-              <Link href="/about" className="label-sm py-2.5 text-ink-muted">
-                About
-              </Link>
-              <Link href="/contact" className="label-sm py-2.5 text-ink-muted">
-                Support
-              </Link>
-            </nav>
-          </div>
-        )}
       </header>
 
       <SearchDialog open={searchOpen} onClose={() => setSearchOpen(false)} departments={departments} />
