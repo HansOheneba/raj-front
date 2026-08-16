@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" width="800" height="1000" role="img">
+  <defs>
+    <linearGradient id="bg-rice-grains-4" x1="0" y1="0" x2="0.7" y2="1">
+      <stop offset="0" stop-color="#F5EFE3" />
+      <stop offset="1" stop-color="#E7DCC7" />
+    </linearGradient>
+    <radialGradient id="glow-rice-grains-4" cx="0.5" cy="0.38" r="0.62">
+      <stop offset="0" stop-color="#FFFDF9" stop-opacity="0.85" />
+      <stop offset="1" stop-color="#FFFDF9" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+  <rect width="800" height="1000" fill="url(#bg-rice-grains-4)" />
+  <rect width="800" height="1000" fill="url(#glow-rice-grains-4)" />
+  <circle cx="386" cy="434" r="248" fill="#FFFDF9" opacity="0.34" />
+  <g transform="translate(126 214) scale(1.3000) rotate(5 200 200)"
+     fill="none" stroke="#B39A72" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.9">
+    
+    <path d="M96 196c0 84 46 140 104 140s104-56 104-140Z" />
+    <path d="M74 196h252" />
+    <g opacity="0.75">
+      <ellipse cx="168" cy="130" rx="13" ry="30" transform="rotate(-28 168 130)" />
+      <ellipse cx="214" cy="106" rx="13" ry="30" transform="rotate(14 214 106)" />
+      <ellipse cx="252" cy="140" rx="13" ry="30" transform="rotate(42 252 140)" />
+      <ellipse cx="196" cy="164" rx="13" ry="30" transform="rotate(-6 196 164)" />
+    </g>
+  </g>
+  <rect x="0.5" y="0.5" width="799" height="999" fill="none" stroke="#B39A72" stroke-opacity="0.14" />
+</svg>

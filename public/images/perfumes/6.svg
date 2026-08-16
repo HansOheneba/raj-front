@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" width="800" height="1000" role="img">
+  <defs>
+    <linearGradient id="bg-perfumes-5" x1="0" y1="0" x2="0.7" y2="1">
+      <stop offset="0" stop-color="#F7EDE9" />
+      <stop offset="1" stop-color="#EDDBD4" />
+    </linearGradient>
+    <radialGradient id="glow-perfumes-5" cx="0.5" cy="0.38" r="0.62">
+      <stop offset="0" stop-color="#FFFDF9" stop-opacity="0.85" />
+      <stop offset="1" stop-color="#FFFDF9" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+  <rect width="800" height="1000" fill="url(#bg-perfumes-5)" />
+  <rect width="800" height="1000" fill="url(#glow-perfumes-5)" />
+  <circle cx="420" cy="468" r="233.11999999999998" fill="#FFFDF9" opacity="0.34" />
+  <g transform="translate(175.60000000000002 263.6) scale(1.2220) rotate(-6 200 200)"
+     fill="none" stroke="#B98A79" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.9">
+    
+    <path d="M172 88h56v40h-56z" />
+    <path d="M150 128h100c28 0 50 22 50 50v138c0 28-22 50-50 50H150c-28 0-50-22-50-50V178c0-28 22-50 50-50Z" />
+    <path d="M228 100h34v34" opacity="0.65" />
+    <path d="M262 134c22 0 34 12 34 28s-12 28-30 28" opacity="0.65" />
+    <path d="M124 226h152" opacity="0.55" />
+  </g>
+  <rect x="0.5" y="0.5" width="799" height="999" fill="none" stroke="#B98A79" stroke-opacity="0.14" />
+</svg>

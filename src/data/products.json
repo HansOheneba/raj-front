@@ -1,0 +1,881 @@
+[
+  {
+    "id": "p-001",
+    "slug": "golden-basmati-rice",
+    "name": "Golden Basmati Rice",
+    "departmentId": "dep-pantry",
+    "brand": "Raj pantry",
+    "description": "Aged long-grain basmati. Cooks separate and stays fluffy. UK packed. Sold by weight.",
+    "imageUrls": [
+      "/images/products/golden-basmati-rice-1.jpg",
+      "/images/products/golden-basmati-rice-2.jpg",
+      "/images/products/golden-basmati-rice-3.jpg"
+    ],
+    "price": 189,
+    "compareAtPrice": 215,
+    "inStock": true,
+    "createdAt": "2026-05-12",
+    "popularity": 96,
+    "attributes": {
+      "Origin": "UK packed"
+    },
+    "variants": [
+      {
+        "id": "v-001-1",
+        "sku": "RICE-BAS-1",
+        "attributes": {
+          "Weight": "1kg"
+        },
+        "price": 45,
+        "stock": 40
+      },
+      {
+        "id": "v-001-5",
+        "sku": "RICE-BAS-5",
+        "attributes": {
+          "Weight": "5kg"
+        },
+        "price": 189,
+        "stock": 22
+      },
+      {
+        "id": "v-001-10",
+        "sku": "RICE-BAS-10",
+        "attributes": {
+          "Weight": "10kg"
+        },
+        "price": 349,
+        "stock": 8
+      }
+    ],
+    "tags": [
+      "sale"
+    ]
+  },
+  {
+    "id": "p-002",
+    "slug": "jasmine-fragrant-rice",
+    "name": "Jasmine Fragrant Rice",
+    "departmentId": "dep-pantry",
+    "brand": "Raj pantry",
+    "description": "Soft, floral jasmine rice milled for everyday pots. Packed in the UK.",
+    "imageUrls": [
+      "/images/products/jasmine-fragrant-rice-1.jpg",
+      "/images/products/jasmine-fragrant-rice-2.jpg",
+      "/images/products/jasmine-fragrant-rice-3.jpg"
+    ],
+    "price": 165,
+    "inStock": true,
+    "createdAt": "2026-04-02",
+    "popularity": 88,
+    "attributes": {
+      "Origin": "UK packed"
+    },
+    "variants": [
+      {
+        "id": "v-002-1",
+        "sku": "RICE-JAS-1",
+        "attributes": {
+          "Weight": "1kg"
+        },
+        "price": 42,
+        "stock": 30
+      },
+      {
+        "id": "v-002-5",
+        "sku": "RICE-JAS-5",
+        "attributes": {
+          "Weight": "5kg"
+        },
+        "price": 165,
+        "stock": 18
+      }
+    ]
+  },
+  {
+    "id": "p-003",
+    "slug": "brown-long-grain-rice",
+    "name": "Brown Long Grain Rice",
+    "departmentId": "dep-pantry",
+    "description": "Wholegrain rice with the bran left on. Nutty, slower cook.",
+    "imageUrls": [
+      "/images/products/brown-long-grain-rice-1.jpg",
+      "/images/products/brown-long-grain-rice-2.jpg",
+      "/images/products/brown-long-grain-rice-3.jpg"
+    ],
+    "price": 155,
+    "inStock": true,
+    "createdAt": "2026-03-18",
+    "popularity": 71,
+    "attributes": {
+      "Weight": "5kg"
+    }
+  },
+  {
+    "id": "p-004",
+    "slug": "extra-virgin-olive-oil",
+    "name": "Extra Virgin Olive Oil",
+    "departmentId": "dep-pantry",
+    "description": "First cold press in dark glass. For finishing, not deep frying.",
+    "imageUrls": [
+      "/images/products/extra-virgin-olive-oil-1.jpg",
+      "/images/products/extra-virgin-olive-oil-2.jpg",
+      "/images/products/extra-virgin-olive-oil-3.jpg"
+    ],
+    "price": 95,
+    "inStock": true,
+    "createdAt": "2026-03-11",
+    "popularity": 70,
+    "attributes": {
+      "Origin": "Mediterranean"
+    },
+    "variants": [
+      {
+        "id": "v-004-250",
+        "sku": "OIL-OLV-250",
+        "attributes": {
+          "Volume": "250ml"
+        },
+        "price": 55,
+        "stock": 16
+      },
+      {
+        "id": "v-004-500",
+        "sku": "OIL-OLV-500",
+        "attributes": {
+          "Volume": "500ml"
+        },
+        "price": 95,
+        "stock": 12
+      },
+      {
+        "id": "v-004-1",
+        "sku": "OIL-OLV-1L",
+        "attributes": {
+          "Volume": "1L"
+        },
+        "price": 165,
+        "stock": 6
+      }
+    ]
+  },
+  {
+    "id": "p-005",
+    "slug": "coconut-cooking-oil",
+    "name": "Coconut Cooking Oil",
+    "departmentId": "dep-pantry",
+    "description": "Refined coconut oil for high-heat cooking. Neutral taste.",
+    "imageUrls": [
+      "/images/products/coconut-cooking-oil-1.jpg",
+      "/images/products/coconut-cooking-oil-2.jpg",
+      "/images/products/coconut-cooking-oil-3.jpg"
+    ],
+    "price": 62,
+    "inStock": true,
+    "createdAt": "2026-02-14",
+    "popularity": 66,
+    "attributes": {
+      "Volume": "500ml"
+    }
+  },
+  {
+    "id": "p-006",
+    "slug": "cold-pressed-groundnut-oil",
+    "name": "Cold Pressed Groundnut Oil",
+    "departmentId": "dep-pantry",
+    "description": "Peanut oil with a light roast note. For frying and marinades.",
+    "imageUrls": [
+      "/images/products/cold-pressed-groundnut-oil-1.jpg",
+      "/images/products/cold-pressed-groundnut-oil-2.jpg",
+      "/images/products/cold-pressed-groundnut-oil-3.jpg"
+    ],
+    "price": 58,
+    "inStock": true,
+    "createdAt": "2026-01-30",
+    "popularity": 61,
+    "attributes": {
+      "Volume": "500ml"
+    }
+  },
+  {
+    "id": "p-007",
+    "slug": "greek-style-yoghurt",
+    "name": "Greek Style Yoghurt",
+    "departmentId": "dep-pantry",
+    "description": "Thick strained yoghurt. Keep chilled after opening.",
+    "imageUrls": [
+      "/images/products/greek-style-yoghurt-1.jpg",
+      "/images/products/greek-style-yoghurt-2.jpg",
+      "/images/products/greek-style-yoghurt-3.jpg"
+    ],
+    "price": 28,
+    "inStock": true,
+    "createdAt": "2026-07-08",
+    "popularity": 74,
+    "attributes": {
+      "Pack": "500g"
+    },
+    "tags": [
+      "new"
+    ]
+  },
+  {
+    "id": "p-008",
+    "slug": "full-cream-milk-powder",
+    "name": "Full Cream Milk Powder",
+    "departmentId": "dep-pantry",
+    "description": "Whole milk powder for tea, baking and emergency fridge days.",
+    "imageUrls": [
+      "/images/products/full-cream-milk-powder-1.jpg",
+      "/images/products/full-cream-milk-powder-2.jpg",
+      "/images/products/full-cream-milk-powder-3.jpg"
+    ],
+    "price": 85,
+    "inStock": true,
+    "createdAt": "2026-04-21",
+    "popularity": 68,
+    "attributes": {
+      "Weight": "900g"
+    }
+  },
+  {
+    "id": "p-009",
+    "slug": "evaporated-milk-six-pack",
+    "name": "Evaporated Milk Six Pack",
+    "departmentId": "dep-pantry",
+    "description": "Shelf-stable evaporated milk. Six tins in a wrap.",
+    "imageUrls": [
+      "/images/products/evaporated-milk-six-pack-1.jpg",
+      "/images/products/evaporated-milk-six-pack-2.jpg",
+      "/images/products/evaporated-milk-six-pack-3.jpg"
+    ],
+    "price": 72,
+    "inStock": true,
+    "createdAt": "2026-05-03",
+    "popularity": 69,
+    "attributes": {
+      "Pack": "6 x 410g"
+    }
+  },
+  {
+    "id": "p-010",
+    "slug": "velvet-musk-body-mist",
+    "name": "Velvet Musk Body Mist",
+    "departmentId": "dep-beauty",
+    "description": "Light body mist for after lotion. UK retail bottle.",
+    "imageUrls": [
+      "/images/products/velvet-musk-body-mist-1.jpg",
+      "/images/products/velvet-musk-body-mist-2.jpg",
+      "/images/products/velvet-musk-body-mist-3.jpg"
+    ],
+    "price": 89,
+    "inStock": true,
+    "createdAt": "2026-06-08",
+    "popularity": 77,
+    "attributes": {
+      "Volume": "200ml"
+    }
+  },
+  {
+    "id": "p-011",
+    "slug": "saffron-cedar-attar-oil",
+    "name": "Saffron Cedar Attar Oil",
+    "departmentId": "dep-beauty",
+    "description": "Concentrated perfume oil. Roll on pulse points. Boxed.",
+    "imageUrls": [
+      "/images/products/saffron-cedar-attar-oil-1.jpg",
+      "/images/products/saffron-cedar-attar-oil-2.jpg",
+      "/images/products/saffron-cedar-attar-oil-3.jpg"
+    ],
+    "price": 145,
+    "inStock": true,
+    "createdAt": "2026-08-01",
+    "popularity": 64,
+    "attributes": {
+      "Volume": "12ml"
+    },
+    "tags": [
+      "new"
+    ]
+  },
+  {
+    "id": "p-012",
+    "slug": "rose-nectar-eau-de-toilette",
+    "name": "Rose Nectar Eau de Toilette",
+    "departmentId": "dep-beauty",
+    "description": "Soft rose EDT for daytime. Retail boxed 50ml.",
+    "imageUrls": [
+      "/images/products/rose-nectar-eau-de-toilette-1.jpg",
+      "/images/products/rose-nectar-eau-de-toilette-2.jpg",
+      "/images/products/rose-nectar-eau-de-toilette-3.jpg"
+    ],
+    "price": 210,
+    "inStock": true,
+    "createdAt": "2026-06-19",
+    "popularity": 63,
+    "attributes": {
+      "Volume": "50ml"
+    }
+  },
+  {
+    "id": "p-013",
+    "slug": "ivory-linen-wrap-dress",
+    "name": "Ivory Linen Wrap Dress",
+    "departmentId": "dep-fashion",
+    "description": "Cotton-linen wrap cut for Accra heat. UK goods.",
+    "imageUrls": [
+      "/images/products/ivory-linen-wrap-dress-1.jpg",
+      "/images/products/ivory-linen-wrap-dress-2.jpg",
+      "/images/products/ivory-linen-wrap-dress-3.jpg"
+    ],
+    "price": 420,
+    "inStock": true,
+    "createdAt": "2026-05-22",
+    "popularity": 60,
+    "attributes": {
+      "Fabric": "Linen"
+    },
+    "variants": [
+      {
+        "id": "v-013-s",
+        "sku": "DRS-LIN-S",
+        "attributes": {
+          "Size": "S"
+        },
+        "price": 420,
+        "stock": 4
+      },
+      {
+        "id": "v-013-m",
+        "sku": "DRS-LIN-M",
+        "attributes": {
+          "Size": "M"
+        },
+        "price": 420,
+        "stock": 6
+      },
+      {
+        "id": "v-013-l",
+        "sku": "DRS-LIN-L",
+        "attributes": {
+          "Size": "L"
+        },
+        "price": 420,
+        "stock": 3
+      }
+    ]
+  },
+  {
+    "id": "p-014",
+    "slug": "cotton-poplin-day-dress",
+    "name": "Cotton Poplin Day Dress",
+    "departmentId": "dep-fashion",
+    "description": "Crisp poplin day dress. Machine wash cold.",
+    "imageUrls": [
+      "/images/products/cotton-poplin-day-dress-1.jpg",
+      "/images/products/cotton-poplin-day-dress-2.jpg",
+      "/images/products/cotton-poplin-day-dress-3.jpg"
+    ],
+    "price": 380,
+    "inStock": true,
+    "createdAt": "2026-04-09",
+    "popularity": 57,
+    "attributes": {
+      "Fabric": "Cotton"
+    },
+    "variants": [
+      {
+        "id": "v-014-s",
+        "sku": "DRS-POP-S",
+        "attributes": {
+          "Size": "S"
+        },
+        "price": 380,
+        "stock": 5
+      },
+      {
+        "id": "v-014-m",
+        "sku": "DRS-POP-M",
+        "attributes": {
+          "Size": "M"
+        },
+        "price": 380,
+        "stock": 5
+      },
+      {
+        "id": "v-014-l",
+        "sku": "DRS-POP-L",
+        "attributes": {
+          "Size": "L"
+        },
+        "price": 380,
+        "stock": 2
+      }
+    ]
+  },
+  {
+    "id": "p-015",
+    "slug": "ankara-print-a-line-dress",
+    "name": "Ankara Print A-Line Dress",
+    "departmentId": "dep-fashion",
+    "description": "A-line wax print dress. Pattern placement varies by piece.",
+    "imageUrls": [
+      "/images/products/ankara-print-a-line-dress-1.jpg",
+      "/images/products/ankara-print-a-line-dress-2.jpg",
+      "/images/products/ankara-print-a-line-dress-3.jpg"
+    ],
+    "price": 455,
+    "inStock": true,
+    "createdAt": "2026-07-11",
+    "popularity": 72,
+    "attributes": {
+      "Fabric": "Wax print"
+    },
+    "variants": [
+      {
+        "id": "v-015-s",
+        "sku": "DRS-ANK-S",
+        "attributes": {
+          "Size": "S"
+        },
+        "price": 455,
+        "stock": 3
+      },
+      {
+        "id": "v-015-m",
+        "sku": "DRS-ANK-M",
+        "attributes": {
+          "Size": "M"
+        },
+        "price": 455,
+        "stock": 4
+      },
+      {
+        "id": "v-015-l",
+        "sku": "DRS-ANK-L",
+        "attributes": {
+          "Size": "L"
+        },
+        "price": 455,
+        "stock": 1
+      }
+    ],
+    "tags": [
+      "new"
+    ]
+  },
+  {
+    "id": "p-016",
+    "slug": "terracotta-midi-shirt-dress",
+    "name": "Terracotta Midi Shirt Dress",
+    "departmentId": "dep-fashion",
+    "description": "Midi shirt dress with a belt. USA goods.",
+    "imageUrls": [
+      "/images/products/terracotta-midi-shirt-dress-1.jpg",
+      "/images/products/terracotta-midi-shirt-dress-2.jpg",
+      "/images/products/terracotta-midi-shirt-dress-3.jpg"
+    ],
+    "price": 399,
+    "compareAtPrice": 470,
+    "inStock": true,
+    "createdAt": "2026-03-28",
+    "popularity": 55,
+    "attributes": {
+      "Length": "Midi"
+    },
+    "tags": [
+      "sale"
+    ]
+  },
+  {
+    "id": "p-017",
+    "slug": "pleated-chiffon-maxi-dress",
+    "name": "Pleated Chiffon Maxi Dress",
+    "departmentId": "dep-fashion",
+    "description": "Floaty chiffon maxi. Lined to the knee.",
+    "imageUrls": [
+      "/images/products/pleated-chiffon-maxi-dress-1.jpg",
+      "/images/products/pleated-chiffon-maxi-dress-2.jpg",
+      "/images/products/pleated-chiffon-maxi-dress-3.jpg"
+    ],
+    "price": 520,
+    "inStock": true,
+    "createdAt": "2026-05-30",
+    "popularity": 59,
+    "attributes": {
+      "Length": "Maxi"
+    }
+  },
+  {
+    "id": "p-018",
+    "slug": "structured-shoulder-bag",
+    "name": "Structured Shoulder Bag",
+    "departmentId": "dep-fashion",
+    "brand": "UK goods",
+    "description": "Black structured shoulder bag. Not affiliated with any high-street house. Check the listing photos.",
+    "imageUrls": [
+      "/images/products/structured-shoulder-bag-1.jpg",
+      "/images/products/structured-shoulder-bag-2.jpg",
+      "/images/products/structured-shoulder-bag-3.jpg"
+    ],
+    "price": 399,
+    "inStock": true,
+    "createdAt": "2026-07-28",
+    "popularity": 82,
+    "attributes": {
+      "Material": "Faux leather"
+    },
+    "variants": [
+      {
+        "id": "v-018-blk",
+        "sku": "BAG-STR-BLK",
+        "attributes": {
+          "Color": "Black"
+        },
+        "price": 399,
+        "stock": 5,
+        "imageUrls": [
+          "/images/products/structured-shoulder-bag-1.jpg"
+        ]
+      },
+      {
+        "id": "v-018-tan",
+        "sku": "BAG-STR-TAN",
+        "attributes": {
+          "Color": "Tan"
+        },
+        "price": 399,
+        "stock": 3,
+        "imageUrls": [
+          "/images/products/structured-shoulder-bag-2.jpg"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "p-019",
+    "slug": "canvas-court-sneakers",
+    "name": "Canvas Court Sneakers",
+    "departmentId": "dep-footwear",
+    "description": "Low court sneakers. USA stock. Pick colour and size.",
+    "imageUrls": [
+      "/images/products/canvas-court-sneakers-1.jpg",
+      "/images/products/canvas-court-sneakers-2.jpg",
+      "/images/products/canvas-court-sneakers-3.jpg"
+    ],
+    "price": 890,
+    "inStock": true,
+    "createdAt": "2026-08-05",
+    "popularity": 80,
+    "attributes": {
+      "Style": "Low top"
+    },
+    "variants": [
+      {
+        "id": "v-019-w40",
+        "sku": "SNK-WHT-40",
+        "attributes": {
+          "Color": "White",
+          "Size": "40"
+        },
+        "price": 890,
+        "stock": 4,
+        "imageUrls": [
+          "/images/products/canvas-court-sneakers-1.jpg"
+        ]
+      },
+      {
+        "id": "v-019-w41",
+        "sku": "SNK-WHT-41",
+        "attributes": {
+          "Color": "White",
+          "Size": "41"
+        },
+        "price": 890,
+        "stock": 3,
+        "imageUrls": [
+          "/images/products/canvas-court-sneakers-1.jpg"
+        ]
+      },
+      {
+        "id": "v-019-w42",
+        "sku": "SNK-WHT-42",
+        "attributes": {
+          "Color": "White",
+          "Size": "42"
+        },
+        "price": 890,
+        "stock": 0,
+        "imageUrls": [
+          "/images/products/canvas-court-sneakers-1.jpg"
+        ]
+      },
+      {
+        "id": "v-019-n40",
+        "sku": "SNK-NVY-40",
+        "attributes": {
+          "Color": "Navy",
+          "Size": "40"
+        },
+        "price": 890,
+        "stock": 2,
+        "imageUrls": [
+          "/images/products/canvas-court-sneakers-2.jpg"
+        ]
+      },
+      {
+        "id": "v-019-n41",
+        "sku": "SNK-NVY-41",
+        "attributes": {
+          "Color": "Navy",
+          "Size": "41"
+        },
+        "price": 890,
+        "stock": 2,
+        "imageUrls": [
+          "/images/products/canvas-court-sneakers-2.jpg"
+        ]
+      },
+      {
+        "id": "v-019-n42",
+        "sku": "SNK-NVY-42",
+        "attributes": {
+          "Color": "Navy",
+          "Size": "42"
+        },
+        "price": 890,
+        "stock": 1,
+        "imageUrls": [
+          "/images/products/canvas-court-sneakers-2.jpg"
+        ]
+      }
+    ],
+    "tags": [
+      "new"
+    ]
+  },
+  {
+    "id": "p-020",
+    "slug": "pool-slides",
+    "name": "Pool Slides",
+    "departmentId": "dep-footwear",
+    "description": "Moulded footbed slides. Size 40 is waiting on a restock.",
+    "imageUrls": [
+      "/images/products/pool-slides-1.jpg",
+      "/images/products/pool-slides-2.jpg",
+      "/images/products/pool-slides-3.jpg"
+    ],
+    "price": 249,
+    "inStock": true,
+    "createdAt": "2026-07-15",
+    "popularity": 73,
+    "attributes": {
+      "Color": "Black"
+    },
+    "variants": [
+      {
+        "id": "v-020-38",
+        "sku": "SLD-BLK-38",
+        "attributes": {
+          "Size": "38"
+        },
+        "price": 249,
+        "stock": 4
+      },
+      {
+        "id": "v-020-39",
+        "sku": "SLD-BLK-39",
+        "attributes": {
+          "Size": "39"
+        },
+        "price": 249,
+        "stock": 2
+      },
+      {
+        "id": "v-020-40",
+        "sku": "SLD-BLK-40",
+        "attributes": {
+          "Size": "40"
+        },
+        "price": 249,
+        "stock": 0
+      }
+    ]
+  },
+  {
+    "id": "p-021",
+    "slug": "leather-loafer",
+    "name": "Leather Loafer",
+    "departmentId": "dep-footwear",
+    "description": "Penny loafer in smooth leather. UK last. Currently sold out.",
+    "imageUrls": [
+      "/images/products/leather-loafer-1.jpg",
+      "/images/products/leather-loafer-2.jpg",
+      "/images/products/leather-loafer-3.jpg"
+    ],
+    "price": 1290,
+    "inStock": false,
+    "createdAt": "2026-06-30",
+    "popularity": 75,
+    "attributes": {
+      "Color": "Black"
+    },
+    "variants": [
+      {
+        "id": "v-021-40",
+        "sku": "LOF-BLK-40",
+        "attributes": {
+          "Size": "40"
+        },
+        "price": 1290,
+        "stock": 0
+      },
+      {
+        "id": "v-021-41",
+        "sku": "LOF-BLK-41",
+        "attributes": {
+          "Size": "41"
+        },
+        "price": 1290,
+        "stock": 0
+      }
+    ]
+  },
+  {
+    "id": "p-022",
+    "slug": "amber-oud-eau-de-parfum",
+    "name": "Amber Oud Eau de Parfum",
+    "departmentId": "dep-fragrance",
+    "description": "Warm amber and oud. Boxed 100ml. Check the bottle in the photos.",
+    "imageUrls": [
+      "/images/products/amber-oud-eau-de-parfum-1.jpg",
+      "/images/products/amber-oud-eau-de-parfum-2.jpg",
+      "/images/products/amber-oud-eau-de-parfum-3.jpg"
+    ],
+    "price": 345,
+    "inStock": true,
+    "createdAt": "2026-07-02",
+    "popularity": 79,
+    "attributes": {
+      "Volume": "100ml"
+    }
+  },
+  {
+    "id": "p-023",
+    "slug": "ivory-jasmine-eau-de-parfum",
+    "name": "Ivory Jasmine Eau de Parfum",
+    "departmentId": "dep-fragrance",
+    "description": "White floral jasmine. Retail boxed 100ml.",
+    "imageUrls": [
+      "/images/products/ivory-jasmine-eau-de-parfum-1.jpg",
+      "/images/products/ivory-jasmine-eau-de-parfum-2.jpg",
+      "/images/products/ivory-jasmine-eau-de-parfum-3.jpg"
+    ],
+    "price": 345,
+    "inStock": true,
+    "createdAt": "2026-04-18",
+    "popularity": 58,
+    "attributes": {
+      "Volume": "100ml"
+    }
+  },
+  {
+    "id": "p-024",
+    "slug": "woven-storage-basket",
+    "name": "Woven Storage Basket",
+    "departmentId": "dep-household",
+    "description": "Open weave basket for market runs and laundry.",
+    "imageUrls": [
+      "/images/products/woven-storage-basket-1.jpg",
+      "/images/products/woven-storage-basket-2.jpg",
+      "/images/products/woven-storage-basket-3.jpg"
+    ],
+    "price": 180,
+    "inStock": true,
+    "createdAt": "2026-02-09",
+    "popularity": 54,
+    "attributes": {
+      "Material": "Rattan"
+    }
+  },
+  {
+    "id": "p-025",
+    "slug": "ceramic-serving-bowl-set",
+    "name": "Ceramic Serving Bowl Set",
+    "departmentId": "dep-household",
+    "description": "Set of stoneware bowls. Dishwasher safe.",
+    "imageUrls": [
+      "/images/products/ceramic-serving-bowl-set-1.jpg",
+      "/images/products/ceramic-serving-bowl-set-2.jpg",
+      "/images/products/ceramic-serving-bowl-set-3.jpg"
+    ],
+    "price": 145,
+    "compareAtPrice": 175,
+    "inStock": true,
+    "createdAt": "2026-01-20",
+    "popularity": 49,
+    "attributes": {
+      "Set": "3 pieces"
+    },
+    "tags": [
+      "sale"
+    ]
+  },
+  {
+    "id": "p-026",
+    "slug": "bamboo-kitchen-utensil-set",
+    "name": "Bamboo Kitchen Utensil Set",
+    "departmentId": "dep-household",
+    "description": "Spoon, spatula and ladle in one bundle.",
+    "imageUrls": [
+      "/images/products/bamboo-kitchen-utensil-set-1.jpg",
+      "/images/products/bamboo-kitchen-utensil-set-2.jpg",
+      "/images/products/bamboo-kitchen-utensil-set-3.jpg"
+    ],
+    "price": 95,
+    "inStock": true,
+    "createdAt": "2026-02-22",
+    "popularity": 52,
+    "attributes": {
+      "Set": "4 pieces"
+    }
+  },
+  {
+    "id": "p-027",
+    "slug": "linen-tea-towels",
+    "name": "Linen Tea Towels",
+    "departmentId": "dep-household",
+    "description": "Pair of linen towels. Soften after the first wash.",
+    "imageUrls": [
+      "/images/products/linen-tea-towels-1.jpg",
+      "/images/products/linen-tea-towels-2.jpg",
+      "/images/products/linen-tea-towels-3.jpg"
+    ],
+    "price": 75,
+    "inStock": true,
+    "createdAt": "2026-03-05",
+    "popularity": 48,
+    "attributes": {
+      "Pack": "2"
+    }
+  },
+  {
+    "id": "p-028",
+    "slug": "lavender-laundry-soap-bar",
+    "name": "Lavender Laundry Soap Bar",
+    "departmentId": "dep-household",
+    "description": "Solid laundry soap with lavender. UK goods.",
+    "imageUrls": [
+      "/images/products/lavender-laundry-soap-bar-1.jpg",
+      "/images/products/lavender-laundry-soap-bar-2.jpg",
+      "/images/products/lavender-laundry-soap-bar-3.jpg"
+    ],
+    "price": 32,
+    "inStock": true,
+    "createdAt": "2026-06-12",
+    "popularity": 50,
+    "attributes": {
+      "Weight": "200g"
+    }
+  }
+]

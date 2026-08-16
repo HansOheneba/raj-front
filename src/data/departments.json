@@ -1,0 +1,56 @@
+[
+  {
+    "id": "dep-pantry",
+    "slug": "pantry",
+    "name": "Pantry",
+    "parentId": null,
+    "sortOrder": 1,
+    "image": "/images/categories/rice-grains.jpg",
+    "description": "Rice, oils, snacks and everyday cooking goods."
+  },
+  {
+    "id": "dep-beauty",
+    "slug": "beauty",
+    "name": "Beauty",
+    "parentId": null,
+    "sortOrder": 2,
+    "image": "/images/categories/perfumes.jpg",
+    "description": "Body lotions, care sets and dressing-table essentials."
+  },
+  {
+    "id": "dep-fashion",
+    "slug": "fashion",
+    "name": "Fashion",
+    "parentId": null,
+    "sortOrder": 3,
+    "image": "/images/categories/dresses.jpg",
+    "description": "Bags, dresses and accessories."
+  },
+  {
+    "id": "dep-footwear",
+    "slug": "footwear",
+    "name": "Footwear",
+    "parentId": null,
+    "sortOrder": 4,
+    "image": "/images/editorial/hero-dress.jpg",
+    "description": "Slides, sneakers and branded footwear with sizes listed on each product."
+  },
+  {
+    "id": "dep-fragrance",
+    "slug": "fragrance",
+    "name": "Fragrance",
+    "parentId": null,
+    "sortOrder": 5,
+    "image": "/images/editorial/about-perfume.jpg",
+    "description": "Men and women fragrances in boxed retail sizes."
+  },
+  {
+    "id": "dep-household",
+    "slug": "household",
+    "name": "Household",
+    "parentId": null,
+    "sortOrder": 6,
+    "image": "/images/categories/household.jpg",
+    "description": "Home pieces and cleaning essentials for everyday use."
+  }
+]

@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" width="800" height="1000" role="img">
+  <defs>
+    <linearGradient id="bg-household-0" x1="0" y1="0" x2="0.7" y2="1">
+      <stop offset="0" stop-color="#EEF2EE" />
+      <stop offset="1" stop-color="#DFE6DF" />
+    </linearGradient>
+    <radialGradient id="glow-household-0" cx="0.5" cy="0.38" r="0.62">
+      <stop offset="0" stop-color="#FFFDF9" stop-opacity="0.85" />
+      <stop offset="1" stop-color="#FFFDF9" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+  <rect width="800" height="1000" fill="url(#bg-household-0)" />
+  <rect width="800" height="1000" fill="url(#glow-household-0)" />
+  <circle cx="400" cy="460" r="248" fill="#FFFDF9" opacity="0.34" />
+  <g transform="translate(140 240) scale(1.3000) rotate(0 200 200)"
+     fill="none" stroke="#8E9C8E" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.9">
+    
+    <path d="M96 170h208l-24 164c-3 18-18 32-36 32H156c-18 0-33-14-36-32Z" />
+    <path d="M78 170h244" />
+    <path d="M150 170c0-40 22-70 50-70s50 30 50 70" />
+    <path d="M112 240h176" opacity="0.45" />
+    <path d="M122 300h156" opacity="0.45" />
+    <path d="M136 176l12 186" opacity="0.4" />
+    <path d="M264 176l-12 186" opacity="0.4" />
+    <path d="M200 176v186" opacity="0.4" />
+  </g>
+  <rect x="0.5" y="0.5" width="799" height="999" fill="none" stroke="#8E9C8E" stroke-opacity="0.14" />
+</svg>
