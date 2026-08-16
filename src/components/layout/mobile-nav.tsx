@@ -7,6 +7,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type PointerEvent as ReactPointerEvent,
@@ -29,6 +30,7 @@ const PEEK = 72;
 const OPEN_SCALE = 0.93;
 const OPEN_SHIFT = 16;
 const OPEN_RADIUS = 14;
+const OPEN_BLUR = 6;
 const HYSTERESIS = 10;
 const FLICK_PX = 500;
 const DECELERATION = 0.998;
@@ -190,36 +192,88 @@ function PresentingSurface({
   reduceMotion: boolean;
   children: ReactNode;
 }) {
-  const surfaceRef = useRef<HTMLDivElement>(null);
+  const clipRef = useRef<HTMLDivElement>(null);
+  const pageRef = useRef<HTMLDivElement>(null);
+  const scrollYRef = useRef(0);
+  const pinnedRef = useRef(false);
+
+  const pin = useCallback(() => {
+    const clip = clipRef.current;
+    const page = pageRef.current;
+    if (!clip || !page || pinnedRef.current) return;
+
+    scrollYRef.current = window.scrollY;
+    pinnedRef.current = true;
+    clip.style.position = "fixed";
+    clip.style.inset = "0";
+    clip.style.height = "100dvh";
+    clip.style.width = "100%";
+    clip.style.overflow = "hidden";
+    clip.style.zIndex = "30";
+    page.style.position = "absolute";
+    page.style.top = `${-scrollYRef.current}px`;
+    page.style.left = "0";
+    page.style.right = "0";
+  }, []);
+
+  const unpin = useCallback(() => {
+    const clip = clipRef.current;
+    const page = pageRef.current;
+    if (!clip || !page || !pinnedRef.current) return;
+
+    pinnedRef.current = false;
+    clip.style.position = "";
+    clip.style.inset = "";
+    clip.style.height = "";
+    clip.style.width = "";
+    clip.style.overflow = "";
+    clip.style.zIndex = "";
+    clip.style.transform = "";
+    clip.style.borderRadius = "";
+    clip.style.boxShadow = "";
+    clip.style.willChange = "";
+    page.style.position = "";
+    page.style.top = "";
+    page.style.left = "";
+    page.style.right = "";
+    window.scrollTo(0, scrollYRef.current);
+  }, []);
+
+  useLayoutEffect(() => {
+    if (open) pin();
+    else unpin();
+  }, [open, pin, unpin]);
 
   useMotionValueEvent(progress, "change", (value) => {
-    const surface = surfaceRef.current;
-    if (!surface) return;
+    const clip = clipRef.current;
+    if (!clip) return;
 
     if (reduceMotion || value <= 0.001) {
-      surface.style.transform = "";
-      surface.style.borderRadius = "";
-      surface.style.overflow = "";
-      surface.style.boxShadow = "";
-      surface.style.willChange = "";
+      clip.style.transform = "";
+      clip.style.borderRadius = "";
+      clip.style.boxShadow = "";
+      clip.style.willChange = "";
       return;
     }
 
-    surface.style.willChange = "transform";
-    surface.style.transform = `translateX(${-OPEN_SHIFT * value}px) scale(${1 - (1 - OPEN_SCALE) * value})`;
-    surface.style.borderRadius = `${OPEN_RADIUS * value}px`;
-    surface.style.overflow = "hidden";
-    surface.style.boxShadow = `0 12px 40px rgba(31, 27, 24, ${0.28 * value})`;
+    if (!pinnedRef.current) pin();
+
+    clip.style.willChange = "transform";
+    clip.style.transform = `translateX(${-OPEN_SHIFT * value}px) scale(${1 - (1 - OPEN_SCALE) * value})`;
+    clip.style.borderRadius = `${OPEN_RADIUS * value}px`;
+    clip.style.boxShadow = `0 12px 40px rgba(31, 27, 24, ${0.28 * value})`;
   });
 
   return (
     <div
-      ref={surfaceRef}
+      ref={clipRef}
       className="relative flex min-h-dvh flex-col bg-ivory"
       style={{ transformOrigin: "center center" }}
       inert={open ? true : undefined}
     >
-      {children}
+      <div ref={pageRef} className="flex min-h-dvh flex-1 flex-col">
+        {children}
+      </div>
     </div>
   );
 }
@@ -239,11 +293,18 @@ function DismissScrim({
   useMotionValueEvent(progress, "change", (value) => {
     const scrim = scrimRef.current;
     if (!scrim) return;
+
+    const amount = Math.min(Math.max(value, 0), 1);
+    const reduceTransparency = window.matchMedia("(prefers-reduced-transparency: reduce)").matches;
+
     if (reduceMotion) {
-      scrim.style.opacity = value > 0 ? "0.18" : "0";
+      scrim.style.backgroundColor = amount > 0 ? "rgba(31, 27, 24, 0.18)" : "transparent";
+      scrim.style.backdropFilter = "none";
       return;
     }
-    scrim.style.opacity = `${0.18 * Math.min(value, 1)}`;
+
+    scrim.style.backgroundColor = `rgba(31, 27, 24, ${0.16 * amount})`;
+    scrim.style.backdropFilter = reduceTransparency ? "none" : `blur(${OPEN_BLUR * amount}px)`;
   });
 
   return (
@@ -254,10 +315,10 @@ function DismissScrim({
       aria-label="Close menu"
       onClick={() => setOpen(false)}
       className={cn(
-        "fixed inset-0 z-40 bg-ink md:hidden",
+        "fixed inset-0 z-40 md:hidden",
         open ? "pointer-events-auto" : "pointer-events-none",
       )}
-      style={{ opacity: 0 }}
+      style={{ backgroundColor: "transparent" }}
     />
   );
 }
@@ -396,24 +457,24 @@ function MobileNavSheet({
       style={{ transform: "translateX(100%)" }}
     >
       <header className="flex items-center justify-between px-4 pb-3">
+        <BrandLogo className="h-9" size={36} />
         <button
           ref={closeRef}
           type="button"
           aria-label="Close menu"
           onClick={() => setOpen(false)}
-          className="flex h-11 w-11 items-center justify-center active:scale-[0.97]"
+          className="flex h-11 w-11 items-center justify-center text-ink-muted active:scale-[0.97]"
         >
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-cream text-ink-muted">
-            <X size={15} strokeWidth={2} />
-          </span>
+          <X size={18} strokeWidth={1.75} />
         </button>
-        <BrandLogo className="h-9" size={36} />
       </header>
 
       <nav className="no-rail flex-1 overflow-y-auto overscroll-contain px-4">
-        <p className="px-1 pb-2 text-[13px] text-ink-faint">Shop</p>
-        <NavGroup>
-          <NavRow href="/shop" active={pathname.startsWith("/shop") && !roots.some((department) => pathname === `/shop/${department.slug}`)}>
+        <div className="divide-y divide-line">
+          <NavRow
+            href="/shop"
+            active={pathname.startsWith("/shop") && !roots.some((department) => pathname === `/shop/${department.slug}`)}
+          >
             All products
           </NavRow>
           {roots.map((department) => (
@@ -425,7 +486,7 @@ function MobileNavSheet({
               {department.name}
             </NavRow>
           ))}
-        </NavGroup>
+        </div>
       </nav>
 
       <div className="flex gap-2 px-4 pt-3">
@@ -438,10 +499,6 @@ function MobileNavSheet({
       </div>
     </aside>
   );
-}
-
-function NavGroup({ children }: { children: ReactNode }) {
-  return <div className="overflow-hidden rounded-[10px] bg-cream">{children}</div>;
 }
 
 function NavRow({
@@ -457,8 +514,8 @@ function NavRow({
     <Link
       href={href}
       className={cn(
-        "flex min-h-11 items-center justify-between gap-3 border-b border-line px-4 text-[17px] leading-none tracking-[-0.01em] last:border-b-0",
-        active ? "bg-sand text-ink" : "text-ink active:bg-sand",
+        "flex min-h-12 items-center justify-between gap-3 text-[17px] leading-none tracking-[-0.022em] active:opacity-40",
+        active ? "text-clay" : "text-ink",
       )}
     >
       <span>{children}</span>
