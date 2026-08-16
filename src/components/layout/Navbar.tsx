@@ -36,8 +36,7 @@ export function Navbar({ departments }: { departments: Department[] }) {
         <div className="shell flex h-7 items-center justify-center">
           <p className="label-xs text-center text-cream/85">
             Free Accra delivery over{" "}
-            <span className="text-cream">{formatPrice(siteConfig.freeShippingThreshold)}</span>.{" "}
-            {siteConfig.deliveryNote}
+            <span className="text-cream">{formatPrice(siteConfig.freeShippingThreshold)}</span>
           </p>
         </div>
       </div>
