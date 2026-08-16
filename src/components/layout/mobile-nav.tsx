@@ -163,7 +163,12 @@ export function StoreShell({
 
   return (
     <MobileNavContext.Provider value={{ open, setOpen }}>
-      <PresentingSurface progress={progress} open={open} reduceMotion={Boolean(reduceMotion)}>
+      <PresentingSurface
+        pathname={pathname}
+        progress={progress}
+        open={open}
+        reduceMotion={Boolean(reduceMotion)}
+      >
         {navbar}
         <main className="flex-1">{children}</main>
         {footer}
@@ -182,11 +187,13 @@ export function StoreShell({
 }
 
 function PresentingSurface({
+  pathname,
   progress,
   open,
   reduceMotion,
   children,
 }: {
+  pathname: string;
   progress: MotionValue<number>;
   open: boolean;
   reduceMotion: boolean;
@@ -238,6 +245,13 @@ function PresentingSurface({
     page.style.right = "";
     window.scrollTo(0, scrollYRef.current);
   }, []);
+
+  useLayoutEffect(() => {
+    scrollYRef.current = 0;
+    if (pageRef.current && pinnedRef.current) {
+      pageRef.current.style.top = "0";
+    }
+  }, [pathname]);
 
   useLayoutEffect(() => {
     if (open) pin();
