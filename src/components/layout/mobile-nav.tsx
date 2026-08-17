@@ -21,7 +21,7 @@ import {
   type AnimationPlaybackControls,
   type MotionValue,
 } from "framer-motion";
-import { ChevronRight, Info, MessageCircle, X } from "lucide-react";
+import { ChevronRight, Heart, Info, MessageCircle, User, X } from "lucide-react";
 import { BrandLogo } from "./BrandLogo";
 import { cn } from "@/lib/utils";
 import type { Department } from "@/lib/catalog";
@@ -503,7 +503,13 @@ function MobileNavSheet({
         </div>
       </nav>
 
-      <div className="flex gap-2 px-4 pt-3">
+      <div className="grid grid-cols-2 gap-2 px-4 pt-3">
+        <UtilityLink href="/account" label="Account" active={pathname === "/account"}>
+          <User size={20} strokeWidth={1.5} />
+        </UtilityLink>
+        <UtilityLink href="/saved" label="Your list" active={pathname === "/saved"}>
+          <Heart size={20} strokeWidth={1.5} />
+        </UtilityLink>
         <UtilityLink href="/about" label="About" active={pathname === "/about"}>
           <Info size={20} strokeWidth={1.5} />
         </UtilityLink>

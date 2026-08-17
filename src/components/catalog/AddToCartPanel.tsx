@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { QuantityStepper } from "@/components/ui/QuantityStepper";
 import { VariantPicker } from "./VariantPicker";
 import { useCart } from "@/components/cart/CartProvider";
+import { SaveButton } from "@/components/saved/SaveButton";
+import { savedItemFromProduct } from "@/lib/saved/fromProduct";
 import type { AttributeMap, Product } from "@/lib/catalog";
 import {
   defaultSelection,
@@ -87,6 +89,7 @@ export function AddToCartPanel({
             </>
           )}
         </Button>
+        <SaveButton item={savedItemFromProduct(product, variant)} variant="label" />
       </div>
 
       {added ? (

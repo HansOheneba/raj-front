@@ -1,0 +1,239 @@
+"use client";
+
+import { useState } from "react";
+import { MapPin, Plus } from "lucide-react";
+import { useCustomer } from "./CustomerProvider";
+import { Button } from "@/components/ui/button";
+import { Field } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/PhoneInput";
+import { Textarea } from "@/components/ui/textarea";
+import { ghanaRegions } from "@/lib/customer/regions";
+import { formatGhanaPhone } from "@/lib/phone";
+import type { AddressInput, CustomerAddress } from "@/lib/customer/types";
+
+const selectClassName =
+  "h-9 w-full rounded-md border border-input bg-cream px-3 text-[13px] outline-none";
+
+function AddressFormFields({
+  address,
+  idPrefix,
+}: {
+  address?: CustomerAddress;
+  idPrefix: string;
+}) {
+  return (
+    <>
+      <Field label="Label" htmlFor={`${idPrefix}-label`} hint="Home, work, family. Optional.">
+        <Input
+          id={`${idPrefix}-label`}
+          name="label"
+          defaultValue={address?.label}
+          placeholder="Home"
+        />
+      </Field>
+      <Field label="Full name" htmlFor={`${idPrefix}-name`} required>
+        <Input
+          id={`${idPrefix}-name`}
+          name="name"
+          required
+          autoComplete="name"
+          defaultValue={address?.name}
+        />
+      </Field>
+      <Field label="Phone" htmlFor={`${idPrefix}-phone`} required>
+        <PhoneInput
+          id={`${idPrefix}-phone`}
+          name="phone"
+          required
+          defaultValue={address?.phone}
+        />
+      </Field>
+      <Field label="Region" htmlFor={`${idPrefix}-region`} required>
+        <select
+          id={`${idPrefix}-region`}
+          name="region"
+          required
+          defaultValue={address?.region ?? ghanaRegions[0]}
+          className={selectClassName}
+        >
+          {ghanaRegions.map((region) => (
+            <option key={region} value={region}>
+              {region}
+            </option>
+          ))}
+        </select>
+      </Field>
+      <Field label="Delivery address" htmlFor={`${idPrefix}-line`} required>
+        <Textarea
+          id={`${idPrefix}-line`}
+          name="line"
+          required
+          rows={3}
+          defaultValue={address?.line}
+          placeholder="Street, landmark, directions"
+        />
+      </Field>
+      <Field
+        label="Google Maps link"
+        htmlFor={`${idPrefix}-maps`}
+        hint="Optional. Paste a pin so delivery can find you faster."
+      >
+        <Input
+          id={`${idPrefix}-maps`}
+          name="mapsUrl"
+          type="url"
+          inputMode="url"
+          placeholder="https://maps.app.goo.gl/..."
+          defaultValue={address?.mapsUrl}
+        />
+      </Field>
+    </>
+  );
+}
+
+function draftFromForm(form: FormData): AddressInput {
+  return {
+    label: String(form.get("label") ?? ""),
+    name: String(form.get("name") ?? ""),
+    phone: String(form.get("phone") ?? ""),
+    region: String(form.get("region") ?? ""),
+    line: String(form.get("line") ?? ""),
+    mapsUrl: String(form.get("mapsUrl") ?? ""),
+  };
+}
+
+export function AddressBook() {
+  const { customer, addresses, addAddress, updateAddress, removeAddress, setDefaultAddress } =
+    useCustomer();
+  const [mode, setMode] = useState<{ type: "idle" } | { type: "add" } | { type: "edit"; id: string }>({
+    type: "idle",
+  });
+  const [error, setError] = useState<string | null>(null);
+
+  if (!customer) return null;
+
+  const editing = mode.type === "edit" ? addresses.find((item) => item.id === mode.id) : undefined;
+
+  const submit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const draft = draftFromForm(new FormData(event.currentTarget));
+    const result = mode.type === "edit" ? updateAddress(mode.id, draft) : addAddress(draft);
+    if (!result.ok) {
+      setError(result.message);
+      return;
+    }
+    setError(null);
+    setMode({ type: "idle" });
+  };
+
+  return (
+    <section className="mt-8">
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="label-xs text-ink">Addresses</h3>
+        {mode.type === "idle" && (
+          <button
+            type="button"
+            onClick={() => {
+              setError(null);
+              setMode({ type: "add" });
+            }}
+            className="inline-flex items-center gap-1 text-[12px] text-clay hover:text-clay-dark"
+          >
+            <Plus size={13} strokeWidth={1.5} />
+            Add address
+          </button>
+        )}
+      </div>
+
+      {mode.type !== "idle" ? (
+        <form onSubmit={submit} className="mt-3 flex flex-col gap-3.5 border-t border-line pt-4">
+          <AddressFormFields
+            idPrefix={mode.type === "edit" ? "edit-address" : "new-address"}
+            address={editing}
+          />
+          {error && <p className="text-[13px] text-sale">{error}</p>}
+          <div className="flex flex-wrap items-center gap-2">
+            <Button type="submit">{mode.type === "edit" ? "Save address" : "Add address"}</Button>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => {
+                setError(null);
+                setMode({ type: "idle" });
+              }}
+            >
+              Cancel
+            </Button>
+          </div>
+        </form>
+      ) : addresses.length === 0 ? (
+        <p className="mt-3 border-t border-line pt-3 text-[13px] text-ink-muted">
+          No saved addresses yet. Add one so checkout is quicker next time.
+        </p>
+      ) : (
+        <ul className="mt-3 divide-y divide-line border-t border-line">
+          {addresses.map((address) => (
+            <li key={address.id} className="py-3.5">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-[13px] font-medium text-ink">{address.label}</p>
+                    {address.isDefault && (
+                      <span className="label-xs text-clay">Default</span>
+                    )}
+                  </div>
+                  <p className="mt-1 text-[13px] text-ink">{address.name}</p>
+                  <p className="text-[12px] text-ink-muted">{formatGhanaPhone(address.phone)}</p>
+                  <p className="mt-1 text-[13px] leading-relaxed text-ink-muted">
+                    {address.line}
+                    <span className="block">{address.region}</span>
+                  </p>
+                  {address.mapsUrl && (
+                    <a
+                      href={address.mapsUrl}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      className="mt-2 inline-flex items-center gap-1 text-[12px] text-clay underline decoration-clay/40 underline-offset-2"
+                    >
+                      <MapPin size={12} strokeWidth={1.5} />
+                      Open in Google Maps
+                    </a>
+                  )}
+                </div>
+              </div>
+              <div className="mt-2.5 flex flex-wrap gap-3 text-[11px]">
+                {!address.isDefault && (
+                  <button
+                    type="button"
+                    onClick={() => setDefaultAddress(address.id)}
+                    className="text-ink-muted underline decoration-line-strong underline-offset-2 hover:text-ink"
+                  >
+                    Make default
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setError(null);
+                    setMode({ type: "edit", id: address.id });
+                  }}
+                  className="text-ink-muted underline decoration-line-strong underline-offset-2 hover:text-ink"
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => removeAddress(address.id)}
+                  className="text-ink-faint underline decoration-line-strong underline-offset-2 hover:text-sale"
+                >
+                  Remove
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}

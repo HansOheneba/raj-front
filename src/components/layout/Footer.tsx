@@ -62,6 +62,16 @@ export function Footer({ departments }: { departments: Department[] }) {
               </Link>
             </li>
             <li>
+              <Link href="/account" className="text-[13px] text-ink-muted hover:text-clay">
+                Account
+              </Link>
+            </li>
+            <li>
+              <Link href="/saved" className="text-[13px] text-ink-muted hover:text-clay">
+                Your list
+              </Link>
+            </li>
+            <li>
               <Link href="/cart" className="text-[13px] text-ink-muted hover:text-clay">
                 Cart
               </Link>

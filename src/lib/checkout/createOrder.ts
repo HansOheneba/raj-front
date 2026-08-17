@@ -4,6 +4,7 @@ export type CheckoutCustomer = {
   email: string;
   region: string;
   address: string;
+  mapsUrl?: string;
   notes?: string;
 };
 

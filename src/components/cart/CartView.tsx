@@ -5,15 +5,18 @@ import Link from "next/link";
 import { ArrowRight, ShoppingBag, Trash2 } from "lucide-react";
 import { useCart } from "./CartProvider";
 import { OrderSummary } from "./OrderSummary";
+import { useSaved } from "@/components/saved/SavedProvider";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PriceTag } from "@/components/ui/PriceTag";
 import { QuantityStepper } from "@/components/ui/QuantityStepper";
 import { Skeleton } from "@/components/ui/skeleton";
+import { savedItemFromLine } from "@/lib/saved/fromProduct";
 import { formatPrice } from "@/lib/utils";
 
 export function CartView() {
   const { ready, lines, setQuantity, remove, clear, count } = useCart();
+  const { save } = useSaved();
 
   if (!ready) {
     return (
@@ -112,12 +115,24 @@ export function CartView() {
                 </div>
 
                 <div className="mt-auto flex flex-wrap items-end justify-between gap-3 pt-3">
-                  <QuantityStepper
-                    value={line.quantity}
-                    onChange={(quantity) => setQuantity(line.key, quantity)}
-                    min={0}
-                    max={20}
-                  />
+                  <div className="flex flex-col items-start gap-2">
+                    <QuantityStepper
+                      value={line.quantity}
+                      onChange={(quantity) => setQuantity(line.key, quantity)}
+                      min={0}
+                      max={20}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const saved = save(savedItemFromLine(line));
+                        if (saved) remove(line.key);
+                      }}
+                      className="text-[11px] text-ink-muted underline decoration-line-strong underline-offset-2 transition-colors duration-[var(--duration-ui)] ease-[var(--ease-out)] hover:text-clay"
+                    >
+                      Save for later
+                    </button>
+                  </div>
                   <div className="text-right">
                     <p className="text-[13px] tabular-nums text-ink">{formatPrice(line.lineTotal)}</p>
                     {line.quantity > 1 && (

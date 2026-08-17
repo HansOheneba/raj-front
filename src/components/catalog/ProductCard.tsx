@@ -3,6 +3,8 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { PriceTag } from "@/components/ui/PriceTag";
 import { QuickAddButton } from "./QuickAddButton";
+import { SaveButton } from "@/components/saved/SaveButton";
+import { savedItemFromProduct } from "@/lib/saved/fromProduct";
 import { cn } from "@/lib/utils";
 import type { Department, Product } from "@/lib/catalog";
 import { variantHint } from "@/lib/catalog/variants";
@@ -43,6 +45,11 @@ export function ProductCard({
           {isNew && !onSale && <Badge variant="new">New</Badge>}
           {!product.inStock && <Badge variant="outline">Sold out</Badge>}
         </div>
+
+        <SaveButton
+          item={savedItemFromProduct(product, product.variants?.[0])}
+          className="absolute right-2 top-2"
+        />
 
         <QuickAddButton product={product} />
       </div>

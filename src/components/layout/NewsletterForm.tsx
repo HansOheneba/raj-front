@@ -48,14 +48,9 @@ export function NewsletterForm({
           )}
         </button>
       </div>
-      <p
-        className={cn(
-          "mt-2 text-[11px] transition-colors duration-[var(--duration-ui)] ease-[var(--ease-out)]",
-          status === "done" ? "text-clay" : "text-ink-faint",
-        )}
-      >
-        {status === "done" ? "Thanks. Check your inbox to confirm." : "New arrivals only. No noise."}
-      </p>
+      {status === "done" && (
+        <p className="mt-2 text-[11px] text-clay">Thanks. Check your inbox to confirm.</p>
+      )}
     </form>
   );
 }

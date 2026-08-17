@@ -5,32 +5,34 @@ import { useState } from "react";
 import { Check, ShoppingBag } from "lucide-react";
 import { useCart } from "@/components/cart/CartProvider";
 import { OrderSummary } from "@/components/cart/OrderSummary";
+import { AuthForm } from "@/components/customer/AuthForm";
+import { useCustomer } from "@/components/customer/CustomerProvider";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { PhoneInput } from "@/components/ui/PhoneInput";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { createOrder } from "@/lib/checkout/createOrder";
+import { ghanaRegions } from "@/lib/customer/regions";
 import { formatPrice } from "@/lib/utils";
 
-const regions = [
-  "Greater Accra",
-  "Ashanti",
-  "Central",
-  "Eastern",
-  "Northern",
-  "Volta",
-  "Western",
-];
+const NEW_ADDRESS = "new";
 
 export function CheckoutForm() {
   const { ready, lines, count, subtotal, shipping, total, clear } = useCart();
+  const { ready: customerReady, customer, addresses } = useCustomer();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [placed, setPlaced] = useState<{ reference: string; total: number } | null>(null);
+  const defaultAddressId =
+    addresses.find((address) => address.isDefault)?.id ?? addresses[0]?.id ?? NEW_ADDRESS;
+  const [addressChoice, setAddressChoice] = useState<string | null>(null);
+  const selectedAddressId = addressChoice ?? defaultAddressId;
+  const selectedAddress = addresses.find((address) => address.id === selectedAddressId);
 
-  if (!ready) {
+  if (!ready || !customerReady) {
     return (
       <div className="grid gap-10 lg:grid-cols-[1fr_320px]">
         <div className="flex flex-col gap-4">
@@ -87,11 +89,20 @@ export function CheckoutForm() {
     );
   }
 
+  if (!customer) {
+    return (
+      <div className="mx-auto grid max-w-md gap-2">
+        <AuthForm reason="checkout" />
+      </div>
+    );
+  }
+
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
     setPending(true);
     const form = new FormData(event.currentTarget);
+    const mapsUrl = String(form.get("mapsUrl") ?? "").trim();
     const result = await createOrder({
       customer: {
         name: String(form.get("name") ?? ""),
@@ -99,6 +110,7 @@ export function CheckoutForm() {
         email: String(form.get("email") ?? ""),
         region: String(form.get("region") ?? ""),
         address: String(form.get("address") ?? ""),
+        mapsUrl: mapsUrl || undefined,
         notes: String(form.get("notes") ?? "") || undefined,
       },
       lines: lines.map((line) => ({
@@ -128,32 +140,125 @@ export function CheckoutForm() {
           {count} {count === 1 ? "item" : "items"}.
         </p>
         <Field label="Full name" htmlFor="name" required>
-          <Input id="name" name="name" required autoComplete="name" />
+          <Input
+            id="name"
+            name="name"
+            required
+            autoComplete="name"
+            defaultValue={selectedAddress?.name ?? customer.name}
+            key={`name-${selectedAddressId}`}
+          />
         </Field>
         <Field label="Phone" htmlFor="phone" required>
-          <Input id="phone" name="phone" required autoComplete="tel" />
+          <PhoneInput
+            id="phone"
+            name="phone"
+            required
+            defaultValue={selectedAddress?.phone ?? customer.phone}
+            key={`phone-${selectedAddressId}`}
+          />
         </Field>
         <Field label="Email" htmlFor="email" required>
-          <Input id="email" name="email" type="email" required autoComplete="email" />
-        </Field>
-        <Field label="Region" htmlFor="region" required>
-          <select
-            id="region"
-            name="region"
+          <Input
+            id="email"
+            name="email"
+            type="email"
             required
-            defaultValue={regions[0]}
-            className="h-9 w-full rounded-md border border-input bg-cream px-3 text-[13px] outline-none"
-          >
-            {regions.map((region) => (
-              <option key={region} value={region}>
-                {region}
-              </option>
-            ))}
-          </select>
+            autoComplete="email"
+            defaultValue={customer.email}
+          />
         </Field>
-        <Field label="Delivery address" htmlFor="address" required>
-          <Textarea id="address" name="address" required rows={3} />
-        </Field>
+
+        {addresses.length > 0 && (
+          <fieldset>
+            <legend className="label-xs text-ink-muted">Deliver to</legend>
+            <div className="mt-1.5 flex flex-col gap-1.5">
+              {addresses.map((address) => (
+                <label
+                  key={address.id}
+                  className={`flex cursor-pointer items-start gap-2.5 rounded-md border bg-cream px-3 py-2.5 text-[13px] ${
+                    selectedAddressId === address.id ? "border-clay" : "border-line"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="addressId"
+                    value={address.id}
+                    checked={selectedAddressId === address.id}
+                    onChange={() => setAddressChoice(address.id)}
+                    className="mt-0.5"
+                  />
+                  <span>
+                    <span className="font-medium text-ink">{address.label}</span>
+                    <span className="mt-0.5 block text-ink-muted">
+                      {address.line}, {address.region}
+                    </span>
+                  </span>
+                </label>
+              ))}
+              <label
+                className={`flex cursor-pointer items-start gap-2.5 rounded-md border bg-cream px-3 py-2.5 text-[13px] ${
+                  selectedAddressId === NEW_ADDRESS ? "border-clay" : "border-line"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="addressId"
+                  value={NEW_ADDRESS}
+                  checked={selectedAddressId === NEW_ADDRESS}
+                  onChange={() => setAddressChoice(NEW_ADDRESS)}
+                  className="mt-0.5"
+                />
+                <span className="font-medium text-ink">A different address</span>
+              </label>
+            </div>
+          </fieldset>
+        )}
+
+        {selectedAddress ? (
+          <>
+            <input type="hidden" name="region" value={selectedAddress.region} />
+            <input type="hidden" name="address" value={selectedAddress.line} />
+            {selectedAddress.mapsUrl && (
+              <input type="hidden" name="mapsUrl" value={selectedAddress.mapsUrl} />
+            )}
+          </>
+        ) : (
+          <>
+            <Field label="Region" htmlFor="region" required>
+              <select
+                id="region"
+                name="region"
+                required
+                defaultValue={ghanaRegions[0]}
+                className="h-9 w-full rounded-md border border-input bg-cream px-3 text-[13px] outline-none"
+              >
+                {ghanaRegions.map((region) => (
+                  <option key={region} value={region}>
+                    {region}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Delivery address" htmlFor="address" required>
+              <Textarea id="address" name="address" required rows={3} />
+            </Field>
+            <Field
+              label="Google Maps link"
+              htmlFor="mapsUrl"
+              hint="Optional. Paste a pin so delivery can find you faster."
+            >
+              <Input
+                id="mapsUrl"
+                name="mapsUrl"
+                type="url"
+                inputMode="url"
+                placeholder="https://maps.app.goo.gl/..."
+              />
+            </Field>
+          </>
+        )}
+
         <Field label="Notes" htmlFor="notes">
           <Textarea id="notes" name="notes" rows={2} />
         </Field>

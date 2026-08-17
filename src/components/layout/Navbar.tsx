@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Menu, Search, ShoppingBag } from "lucide-react";
+import { Heart, Menu, Search, ShoppingBag, User } from "lucide-react";
 import { BrandLogo } from "./BrandLogo";
 import { SearchDialog } from "./SearchDialog";
 import { useMobileNav } from "./mobile-nav";
 import { useCart } from "@/components/cart/CartProvider";
+import { useCustomer } from "@/components/customer/CustomerProvider";
+import { useSaved } from "@/components/saved/SavedProvider";
 import { siteConfig } from "@/lib/config";
 import { cn, formatPrice } from "@/lib/utils";
 import type { Department } from "@/lib/catalog";
@@ -15,6 +17,8 @@ import type { Department } from "@/lib/catalog";
 export function Navbar({ departments }: { departments: Department[] }) {
   const pathname = usePathname();
   const { count, ready, addedSignal } = useCart();
+  const { customer } = useCustomer();
+  const { count: savedCount, ready: savedReady } = useSaved();
   const { open: menuOpen, setOpen: setMenuOpen } = useMobileNav();
   const [searchOpen, setSearchOpen] = useState(false);
   const [bump, setBump] = useState(false);
@@ -87,6 +91,31 @@ export function Navbar({ departments }: { departments: Department[] }) {
             >
               <Search size={16} strokeWidth={1.5} />
             </button>
+
+            <Link
+              href="/saved"
+              aria-label={
+                customer
+                  ? `Your list, ${savedCount} ${savedCount === 1 ? "item" : "items"}`
+                  : "Your list"
+              }
+              className="relative flex h-8 w-8 items-center justify-center rounded-md text-ink-muted transition-colors duration-[var(--duration-ui)] ease-[var(--ease-out)] hover:bg-sand hover:text-ink"
+            >
+              <Heart size={16} strokeWidth={1.5} />
+              {savedReady && customer && savedCount > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-clay px-1 text-[9px] font-medium tabular-nums text-cream">
+                  {savedCount > 99 ? "99+" : savedCount}
+                </span>
+              )}
+            </Link>
+
+            <Link
+              href="/account"
+              aria-label={customer ? "Account" : "Sign in"}
+              className="hidden h-8 w-8 items-center justify-center rounded-md text-ink-muted transition-colors duration-[var(--duration-ui)] ease-[var(--ease-out)] hover:bg-sand hover:text-ink md:flex"
+            >
+              <User size={16} strokeWidth={1.5} />
+            </Link>
 
             <Link
               href="/cart"
