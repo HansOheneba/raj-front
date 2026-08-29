@@ -4,51 +4,22 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Search, X } from "lucide-react";
+import { Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { PriceTag } from "@/components/ui/PriceTag";
 import { matchDepartments, searchProducts, type Department, type Product } from "@/lib/catalog";
+import { cn } from "@/lib/utils";
 
 const DEBOUNCE_MS = 150;
 
-export function SearchDialog({
-  open,
-  onClose,
-  departments,
-}: {
-  open: boolean;
-  onClose: () => void;
-  departments: Department[];
-}) {
+export function HeaderSearch({ departments }: { departments: Department[] }) {
   const [term, setTerm] = useState("");
   const [results, setResults] = useState<Product[]>([]);
   const [aisles, setAisles] = useState<Department[]>([]);
   const [searching, setSearching] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-
-  useEffect(() => {
-    if (!open) return;
-    const timer = window.setTimeout(() => inputRef.current?.focus(), 40);
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", onKeyDown);
-    document.body.style.overflow = "hidden";
-    return () => {
-      window.clearTimeout(timer);
-      document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = "";
-    };
-  }, [open, onClose]);
-
-  useEffect(() => {
-    if (!open) {
-      setTerm("");
-      setResults([]);
-      setAisles([]);
-      setSearching(false);
-    }
-  }, [open]);
 
   useEffect(() => {
     const trimmed = term.trim();
@@ -62,7 +33,7 @@ export function SearchDialog({
     let cancelled = false;
     setSearching(true);
     const timer = window.setTimeout(() => {
-      void searchProducts(trimmed, 8)
+      void searchProducts(trimmed, 6)
         .then((items) => {
           if (cancelled) return;
           setResults(items);
@@ -84,77 +55,77 @@ export function SearchDialog({
     };
   }, [term, departments]);
 
-  if (!open) return null;
+  useEffect(() => {
+    const onPointerDown = (event: MouseEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, []);
 
   const submit = () => {
     const trimmed = term.trim();
     if (!trimmed) return;
-    onClose();
+    setOpen(false);
     router.push(`/shop?q=${encodeURIComponent(trimmed)}`);
   };
 
   const departmentName = (product: Product) =>
     departments.find((department) => department.id === product.departmentId)?.name;
 
-  const showPanel = term.trim().length > 1;
+  const showResults = open && term.trim().length > 1;
 
   return (
-    <div className="fixed inset-0 z-[60]">
-      <button
-        type="button"
-        aria-label="Close search"
-        onClick={onClose}
-        className="absolute inset-0 bg-ink/20 backdrop-blur-[2px] motion-safe:animate-fade-in"
+    <div ref={rootRef} className="relative mx-auto w-full max-w-2xl">
+      <Search
+        size={16}
+        strokeWidth={1.5}
+        className="pointer-events-none absolute left-3.5 top-1/2 z-10 -translate-y-1/2 text-ink-faint"
+      />
+      <Input
+        value={term}
+        onChange={(event) => {
+          setTerm(event.target.value);
+          setOpen(true);
+        }}
+        onFocus={() => setOpen(true)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") submit();
+          if (event.key === "Escape") setOpen(false);
+        }}
+        placeholder="Search products"
+        autoComplete="off"
+        autoCorrect="off"
+        spellCheck={false}
+        aria-expanded={showResults}
+        aria-controls="header-search-results"
+        id="header-search"
+        className="h-10 rounded-full border-line-strong bg-sand/60 pl-10 pr-4"
       />
 
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label="Search products"
-        className="relative mx-auto mt-[12vh] w-[calc(100%-2rem)] max-w-lg origin-top overflow-hidden rounded-lg border border-line bg-cream shadow-lift motion-safe:animate-pop-in"
-      >
-        <div className="flex items-center gap-2.5 border-b border-line px-3.5">
-          <Search size={15} strokeWidth={1.5} className="shrink-0 text-ink-faint" />
-          <input
-            ref={inputRef}
-            value={term}
-            onChange={(event) => setTerm(event.target.value)}
-            onKeyDown={(event) => event.key === "Enter" && submit()}
-            placeholder="Search products"
-            autoComplete="off"
-            autoCorrect="off"
-            spellCheck={false}
-            className="h-11 w-full bg-transparent text-[13px] text-ink placeholder:text-ink-faint focus:outline-none"
-          />
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close search"
-            className="shrink-0 text-ink-faint transition-colors duration-[var(--duration-ui)] ease-[var(--ease-out)] hover:text-ink"
-          >
-            <X size={15} strokeWidth={1.5} />
-          </button>
-        </div>
-
-        {showPanel && (
-          <div className="max-h-[52vh] overflow-y-auto">
+      {showResults && (
+        <div
+          id="header-search-results"
+          className="absolute inset-x-0 top-[calc(100%+0.375rem)] z-[60] overflow-hidden rounded-lg border border-line bg-cream shadow-lift"
+        >
+          <div className="max-h-[min(24rem,50vh)] overflow-y-auto">
             {searching && results.length === 0 && aisles.length === 0 ? (
-              <p className="px-3.5 py-6 text-center text-[13px] text-ink-muted">Searching…</p>
+              <p className="px-4 py-5 text-center text-[13px] text-ink-muted">Searching…</p>
             ) : results.length === 0 && aisles.length === 0 ? (
-              <p className="px-3.5 py-6 text-center text-[13px] text-ink-muted">
+              <p className="px-4 py-5 text-center text-[13px] text-ink-muted">
                 Nothing matches “{term.trim()}”.
               </p>
             ) : (
               <>
                 {aisles.length > 0 && (
-                  <div className="border-b border-line px-3.5 py-2.5">
+                  <div className="border-b border-line px-4 py-3">
                     <p className="label-xs pb-2 text-ink-faint">Aisles</p>
                     <ul className="flex flex-wrap gap-1.5">
                       {aisles.map((department) => (
                         <li key={department.id}>
                           <Link
                             href={`/shop/${department.slug}`}
-                            onClick={onClose}
+                            onClick={() => setOpen(false)}
                             className="inline-flex rounded-md border border-line bg-ivory px-2.5 py-1 text-[12px] text-ink-muted transition-colors duration-[var(--duration-ui)] ease-[var(--ease-out)] hover:border-clay hover:text-clay"
                           >
                             {department.name}
@@ -170,8 +141,8 @@ export function SearchDialog({
                       <li key={product.id}>
                         <Link
                           href={`/product/${product.slug}`}
-                          onClick={onClose}
-                          className="flex items-center gap-3 px-3.5 py-2.5 transition-colors duration-[var(--duration-ui)] ease-[var(--ease-out)] hover:bg-sand"
+                          onClick={() => setOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 transition-colors duration-[var(--duration-ui)] ease-[var(--ease-out)] hover:bg-sand"
                         >
                           <span className="relative h-11 w-9 shrink-0 overflow-hidden rounded-md border border-line">
                             <Image
@@ -196,16 +167,38 @@ export function SearchDialog({
                 )}
               </>
             )}
-            <button
-              type="button"
-              onClick={submit}
-              className="label-sm w-full border-t border-line px-3.5 py-2.5 text-center text-ink-muted transition-colors duration-[var(--duration-ui)] ease-[var(--ease-out)] hover:bg-sand hover:text-clay"
-            >
-              See all results
-            </button>
           </div>
-        )}
-      </div>
+          <button
+            type="button"
+            onClick={submit}
+            className="label-sm w-full border-t border-line px-4 py-2.5 text-center text-ink-muted transition-colors duration-[var(--duration-ui)] ease-[var(--ease-out)] hover:bg-sand hover:text-clay"
+          >
+            See all results
+          </button>
+        </div>
+      )}
     </div>
+  );
+}
+
+export function HeaderSearchMobileTrigger({
+  onClick,
+  className,
+}: {
+  onClick: () => void;
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label="Search"
+      className={cn(
+        "flex h-9 w-9 items-center justify-center rounded-md text-ink-muted transition-colors duration-[var(--duration-ui)] ease-[var(--ease-out)] hover:bg-sand hover:text-ink",
+        className,
+      )}
+    >
+      <Search size={17} strokeWidth={1.5} />
+    </button>
   );
 }

@@ -37,6 +37,7 @@ export type Product = {
   attributes: AttributeMap;
   variants?: ProductVariant[];
   tags?: string[];
+  keywords?: string[];
 };
 
 export type ProductQuery = {

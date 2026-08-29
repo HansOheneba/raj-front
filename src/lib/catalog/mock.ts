@@ -8,26 +8,11 @@ import type {
   ProductQuery,
   SortKey,
 } from "./types";
+import { descendantIds } from "./tree";
+import { matchesSearch, rankProducts } from "./search";
 
 const departments = departmentsJson as unknown as Department[];
 const products = productsJson as unknown as Product[];
-
-const descendantIds = (slug: string): Set<string> | undefined => {
-  const root = departments.find((department) => department.slug === slug);
-  if (!root) return undefined;
-  const ids = new Set<string>([root.id]);
-  let grew = true;
-  while (grew) {
-    grew = false;
-    for (const department of departments) {
-      if (department.parentId && ids.has(department.parentId) && !ids.has(department.id)) {
-        ids.add(department.id);
-        grew = true;
-      }
-    }
-  }
-  return ids;
-};
 
 const sorters: Record<SortKey, (a: Product, b: Product) => number> = {
   featured: (a, b) => (b.popularity ?? 0) - (a.popularity ?? 0),
@@ -38,8 +23,10 @@ const sorters: Record<SortKey, (a: Product, b: Product) => number> = {
 };
 
 const filterProducts = (query: ProductQuery = {}): Product[] => {
-  const term = query.search?.trim().toLowerCase();
-  const departmentIds = query.departmentSlug ? descendantIds(query.departmentSlug) : undefined;
+  const term = query.search?.trim();
+  const departmentIds = query.departmentSlug
+    ? descendantIds(departments, query.departmentSlug)
+    : undefined;
 
   return products.filter((product) => {
     if (departmentIds && !departmentIds.has(product.departmentId)) return false;
@@ -52,18 +39,7 @@ const filterProducts = (query: ProductQuery = {}): Product[] => {
     ) {
       return false;
     }
-    if (term) {
-      const haystack = [
-        product.name,
-        product.brand ?? "",
-        product.description,
-        ...Object.values(product.attributes),
-        ...(product.tags ?? []),
-      ]
-        .join(" ")
-        .toLowerCase();
-      if (!haystack.includes(term)) return false;
-    }
+    if (term && !matchesSearch(product, term, departments)) return false;
     return true;
   });
 };
@@ -80,9 +56,16 @@ export const mockCatalog: CatalogClient = {
   async listProducts(query = {}) {
     const sort = query.sort ?? "featured";
     const filtered = filterProducts(query);
-    const items = [...filtered].sort(
-      (a, b) => Number(b.inStock) - Number(a.inStock) || sorters[sort](a, b) || a.name.localeCompare(b.name),
-    );
+    const term = query.search?.trim();
+    const items =
+      term && (sort === "featured" || sort === "popularity")
+        ? rankProducts(filtered, term, departments)
+        : [...filtered].sort(
+            (a, b) =>
+              Number(b.inStock) - Number(a.inStock) ||
+              sorters[sort](a, b) ||
+              a.name.localeCompare(b.name),
+          );
     const prices = products.map((product) => product.price);
     const result: ProductListResult = {
       items,
@@ -108,7 +91,6 @@ export const mockCatalog: CatalogClient = {
   },
 
   async searchProducts(term, limit = 6) {
-    const { items } = await this.listProducts({ search: term, sort: "popularity" });
-    return items.slice(0, limit);
+    return rankProducts(products, term, departments).slice(0, limit);
   },
 };

@@ -24,7 +24,7 @@ import {
 import { ChevronRight, Heart, Info, MessageCircle, User, X } from "lucide-react";
 import { BrandLogo } from "./BrandLogo";
 import { cn } from "@/lib/utils";
-import type { Department } from "@/lib/catalog";
+import type { MegaMenuItem } from "@/lib/catalog";
 
 const PEEK = 72;
 const OPEN_SCALE = 0.93;
@@ -78,12 +78,12 @@ function clampDrag(next: number, width: number) {
 }
 
 export function StoreShell({
-  departments,
+  menu,
   navbar,
   footer,
   children,
 }: {
-  departments: Department[];
+  menu: MegaMenuItem[];
   navbar: ReactNode;
   footer: ReactNode;
   children: ReactNode;
@@ -136,7 +136,7 @@ export function StoreShell({
   }, [pathname, setOpen]);
 
   useEffect(() => {
-    const media = window.matchMedia("(min-width: 768px)");
+    const media = window.matchMedia("(min-width: 1024px)");
     const onChange = () => {
       if (media.matches) setOpen(false);
     };
@@ -175,7 +175,7 @@ export function StoreShell({
       </PresentingSurface>
       <DismissScrim progress={progress} open={open} reduceMotion={Boolean(reduceMotion)} />
       <MobileNavSheet
-        departments={departments}
+        menu={menu}
         progress={progress}
         open={open}
         reduceMotion={Boolean(reduceMotion)}
@@ -329,7 +329,7 @@ function DismissScrim({
       aria-label="Close menu"
       onClick={() => setOpen(false)}
       className={cn(
-        "fixed inset-0 z-40 md:hidden",
+        "fixed inset-0 z-40 lg:hidden",
         open ? "pointer-events-auto" : "pointer-events-none",
       )}
       style={{ backgroundColor: "transparent" }}
@@ -338,14 +338,14 @@ function DismissScrim({
 }
 
 function MobileNavSheet({
-  departments,
+  menu,
   progress,
   open,
   reduceMotion,
   springTo,
   stopAnimation,
 }: {
-  departments: Department[];
+  menu: MegaMenuItem[];
   progress: MotionValue<number>;
   open: boolean;
   reduceMotion: boolean;
@@ -366,7 +366,7 @@ function MobileNavSheet({
     mode: "undecided" | "drag" | "scroll";
   } | null>(null);
   const samples = useRef<{ x: number; t: number }[]>([]);
-  const roots = departments.filter((department) => department.parentId === null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useMotionValueEvent(progress, "change", (value) => {
     const panel = panelRef.current;
@@ -464,7 +464,7 @@ function MobileNavSheet({
         didDrag.current = false;
       }}
       className={cn(
-        "fixed inset-y-0 right-0 z-50 flex w-[min(20rem,calc(100vw-4.5rem))] flex-col border-l border-white/40 bg-sand/80 shadow-lift backdrop-blur-[40px] backdrop-saturate-150 [@media(prefers-reduced-transparency:reduce)]:bg-sand [@media(prefers-reduced-transparency:reduce)]:backdrop-blur-none md:hidden",
+        "fixed inset-y-0 right-0 z-50 flex w-[min(20rem,calc(100vw-4.5rem))] flex-col border-l border-white/40 bg-sand/80 shadow-lift backdrop-blur-[40px] backdrop-saturate-150 [@media(prefers-reduced-transparency:reduce)]:bg-sand [@media(prefers-reduced-transparency:reduce)]:backdrop-blur-none lg:hidden",
         "pt-[max(0.5rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] pr-[max(0px,env(safe-area-inset-right))]",
         open ? "pointer-events-auto" : "pointer-events-none",
       )}
@@ -487,19 +487,67 @@ function MobileNavSheet({
         <div className="divide-y divide-line">
           <NavRow
             href="/shop"
-            active={pathname.startsWith("/shop") && !roots.some((department) => pathname === `/shop/${department.slug}`)}
+            active={pathname.startsWith("/shop") && !menu.some((item) => pathname === item.href || pathname.startsWith(`${item.href}/`))}
           >
             All products
           </NavRow>
-          {roots.map((department) => (
-            <NavRow
-              key={department.id}
-              href={`/shop/${department.slug}`}
-              active={pathname === `/shop/${department.slug}`}
-            >
-              {department.name}
-            </NavRow>
-          ))}
+          {menu.map((item) => {
+            const childActive = item.children.some(
+              (child) => pathname === child.href || pathname.startsWith(`${child.href}/`),
+            );
+            const expanded = expandedId === item.id || childActive;
+            return (
+              <div key={item.id}>
+                <div className="flex items-center">
+                  <NavRow
+                    href={item.href}
+                    active={pathname === item.href || childActive}
+                    className="flex-1"
+                  >
+                    {item.name}
+                  </NavRow>
+                  {item.children.length > 0 && (
+                    <button
+                      type="button"
+                      aria-label={expanded ? `Collapse ${item.name}` : `Expand ${item.name}`}
+                      aria-expanded={expanded}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setExpandedId(expanded && expandedId === item.id ? null : item.id);
+                      }}
+                      className="flex h-12 w-11 items-center justify-center text-ink-faint active:opacity-40"
+                    >
+                      <ChevronRight
+                        size={18}
+                        strokeWidth={1.75}
+                        className={cn(
+                          "transition-transform duration-[var(--duration-ui)] ease-[var(--ease-out)]",
+                          expanded && "rotate-90",
+                        )}
+                      />
+                    </button>
+                  )}
+                </div>
+                {expanded && item.children.length > 0 && (
+                  <ul className="pb-2 pl-3">
+                    {item.children.map((child) => (
+                      <li key={child.id}>
+                        <Link
+                          href={child.href}
+                          className={cn(
+                            "flex min-h-10 items-center text-[15px] tracking-[-0.016em] active:opacity-40",
+                            pathname === child.href ? "text-clay" : "text-ink-muted",
+                          )}
+                        >
+                          {child.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            );
+          })}
         </div>
       </nav>
 
@@ -528,10 +576,12 @@ function MobileNavSheet({
 function NavRow({
   href,
   active,
+  className,
   children,
 }: {
   href: string;
   active: boolean;
+  className?: string;
   children: ReactNode;
 }) {
   return (
@@ -540,10 +590,10 @@ function NavRow({
       className={cn(
         "flex min-h-12 items-center justify-between gap-3 text-[17px] leading-none tracking-[-0.022em] active:opacity-40",
         active ? "text-clay" : "text-ink",
+        className,
       )}
     >
       <span>{children}</span>
-      <ChevronRight size={18} strokeWidth={1.75} className="text-ink-faint" />
     </Link>
   );
 }

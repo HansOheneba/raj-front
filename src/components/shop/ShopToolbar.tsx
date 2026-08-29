@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { ReactNode } from "react";
 import type { Department, SortKey } from "@/lib/catalog";
+import { childrenOf, parentOf, rootDepartments } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
 
 const sorts: { value: SortKey; label: string }[] = [
@@ -43,7 +44,14 @@ export function ShopListing({
     router.push(query ? `${pathname}?${query}` : pathname);
   };
 
-  const roots = departments.filter((department) => department.parentId === null);
+  const roots = rootDepartments(departments);
+  const locked = lockedDepartment
+    ? departments.find((department) => department.slug === lockedDepartment)
+    : undefined;
+  const lockedParent = locked ? parentOf(departments, locked) : undefined;
+  const lockedChildren = locked
+    ? childrenOf(departments, (lockedParent ?? locked).id)
+    : [];
 
   return (
     <div className="lg:grid lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-12">
@@ -53,6 +61,31 @@ export function ShopListing({
           <nav className="mt-3 flex flex-col gap-1">
             <FilterLink href="/shop" label="All" active={!currentDepartment} />
             {roots.map((department) => (
+              <FilterLink
+                key={department.id}
+                href={`/shop/${department.slug}`}
+                label={department.name}
+                active={currentDepartment === department.slug}
+              />
+            ))}
+          </nav>
+        )}
+        {locked && (
+          <nav className="mt-3 flex flex-col gap-1">
+            {lockedParent ? (
+              <FilterLink
+                href={`/shop/${lockedParent.slug}`}
+                label={lockedParent.name}
+                active={false}
+              />
+            ) : (
+              <FilterLink
+                href={`/shop/${locked.slug}`}
+                label={`All ${locked.name.toLowerCase()}`}
+                active={currentDepartment === locked.slug}
+              />
+            )}
+            {lockedChildren.map((department) => (
               <FilterLink
                 key={department.id}
                 href={`/shop/${department.slug}`}
@@ -78,7 +111,7 @@ export function ShopListing({
 
       <div>
         <div className="mb-6 flex flex-col gap-4 lg:hidden">
-          {!lockedDepartment && (
+          {!lockedDepartment ? (
             <div className="no-rail flex gap-2 overflow-x-auto">
               <FilterChip active={!currentDepartment} href="/shop" label="All" />
               {roots.map((department) => (
@@ -90,6 +123,26 @@ export function ShopListing({
                 />
               ))}
             </div>
+          ) : (
+            lockedChildren.length > 0 && (
+              <div className="no-rail flex gap-2 overflow-x-auto">
+                {lockedParent && (
+                  <FilterChip
+                    active={false}
+                    href={`/shop/${lockedParent.slug}`}
+                    label={lockedParent.name}
+                  />
+                )}
+                {lockedChildren.map((department) => (
+                  <FilterChip
+                    key={department.id}
+                    active={currentDepartment === department.slug}
+                    href={`/shop/${department.slug}`}
+                    label={department.name}
+                  />
+                ))}
+              </div>
+            )
           )}
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4">
             <p className="text-[13px] text-ink-muted">{resultCount} products</p>

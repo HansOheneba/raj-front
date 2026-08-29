@@ -5,8 +5,35 @@
     "name": "Pantry",
     "parentId": null,
     "sortOrder": 1,
-    "image": "/images/categories/rice-grains.jpg",
+    "image": "/images/products/golden-basmati-rice-1.jpg",
     "description": "Rice, oils, snacks and everyday cooking goods."
+  },
+  {
+    "id": "dep-pantry-rice",
+    "slug": "rice-grains",
+    "name": "Rice & grains",
+    "parentId": "dep-pantry",
+    "sortOrder": 11,
+    "image": "/images/products/golden-basmati-rice-1.jpg",
+    "description": "Basmati, jasmine and everyday rice."
+  },
+  {
+    "id": "dep-pantry-oils",
+    "slug": "oils",
+    "name": "Oils",
+    "parentId": "dep-pantry",
+    "sortOrder": 12,
+    "image": "/images/products/extra-virgin-olive-oil-1.jpg",
+    "description": "Cooking and finishing oils."
+  },
+  {
+    "id": "dep-pantry-dairy",
+    "slug": "dairy",
+    "name": "Dairy",
+    "parentId": "dep-pantry",
+    "sortOrder": 13,
+    "image": "/images/products/greek-style-yoghurt-1.jpg",
+    "description": "Yoghurt, milk powder and tinned milk."
   },
   {
     "id": "dep-beauty",
@@ -14,8 +41,26 @@
     "name": "Beauty",
     "parentId": null,
     "sortOrder": 2,
-    "image": "/images/categories/perfumes.jpg",
+    "image": "/images/products/velvet-musk-body-mist-1.jpg",
     "description": "Body lotions, care sets and dressing-table essentials."
+  },
+  {
+    "id": "dep-beauty-body",
+    "slug": "body-mists",
+    "name": "Body mists",
+    "parentId": "dep-beauty",
+    "sortOrder": 21,
+    "image": "/images/products/velvet-musk-body-mist-1.jpg",
+    "description": "Light body sprays for after lotion."
+  },
+  {
+    "id": "dep-beauty-scent",
+    "slug": "attar-edt",
+    "name": "Attar & EDT",
+    "parentId": "dep-beauty",
+    "sortOrder": 22,
+    "image": "/images/products/saffron-cedar-attar-oil-1.jpg",
+    "description": "Perfume oils and eau de toilette."
   },
   {
     "id": "dep-fashion",
@@ -23,8 +68,26 @@
     "name": "Fashion",
     "parentId": null,
     "sortOrder": 3,
-    "image": "/images/categories/dresses.jpg",
+    "image": "/images/products/ivory-linen-wrap-dress-1.jpg",
     "description": "Bags, dresses and accessories."
+  },
+  {
+    "id": "dep-fashion-dresses",
+    "slug": "dresses",
+    "name": "Dresses",
+    "parentId": "dep-fashion",
+    "sortOrder": 31,
+    "image": "/images/products/ivory-linen-wrap-dress-1.jpg",
+    "description": "Day dresses, wraps and occasion pieces."
+  },
+  {
+    "id": "dep-fashion-bags",
+    "slug": "bags",
+    "name": "Bags",
+    "parentId": "dep-fashion",
+    "sortOrder": 32,
+    "image": "/images/products/structured-shoulder-bag-1.jpg",
+    "description": "Shoulder bags and everyday carry."
   },
   {
     "id": "dep-footwear",
@@ -32,8 +95,35 @@
     "name": "Footwear",
     "parentId": null,
     "sortOrder": 4,
-    "image": "/images/editorial/hero-dress.jpg",
+    "image": "/images/products/canvas-court-sneakers-1.jpg",
     "description": "Slides, sneakers and branded footwear."
+  },
+  {
+    "id": "dep-footwear-sneakers",
+    "slug": "sneakers",
+    "name": "Sneakers",
+    "parentId": "dep-footwear",
+    "sortOrder": 41,
+    "image": "/images/products/canvas-court-sneakers-1.jpg",
+    "description": "Court and canvas sneakers."
+  },
+  {
+    "id": "dep-footwear-slides",
+    "slug": "slides",
+    "name": "Slides",
+    "parentId": "dep-footwear",
+    "sortOrder": 42,
+    "image": "/images/products/pool-slides-1.jpg",
+    "description": "Pool slides and moulded sandals."
+  },
+  {
+    "id": "dep-footwear-loafers",
+    "slug": "loafers",
+    "name": "Loafers",
+    "parentId": "dep-footwear",
+    "sortOrder": 43,
+    "image": "/images/products/leather-loafer-1.jpg",
+    "description": "Penny loafers and leather flats."
   },
   {
     "id": "dep-fragrance",
@@ -41,7 +131,7 @@
     "name": "Fragrance",
     "parentId": null,
     "sortOrder": 5,
-    "image": "/images/editorial/about-perfume.jpg",
+    "image": "/images/products/amber-oud-eau-de-parfum-1.jpg",
     "description": "Men and women fragrances in boxed retail sizes."
   },
   {
@@ -50,7 +140,25 @@
     "name": "Household",
     "parentId": null,
     "sortOrder": 6,
-    "image": "/images/categories/household.jpg",
+    "image": "/images/products/woven-storage-basket-1.jpg",
     "description": "Home pieces and cleaning essentials for everyday use."
+  },
+  {
+    "id": "dep-household-kitchen",
+    "slug": "kitchen",
+    "name": "Kitchen",
+    "parentId": "dep-household",
+    "sortOrder": 61,
+    "image": "/images/products/ceramic-serving-bowl-set-1.jpg",
+    "description": "Bowls, utensils and tea towels."
+  },
+  {
+    "id": "dep-household-home",
+    "slug": "home-care",
+    "name": "Home care",
+    "parentId": "dep-household",
+    "sortOrder": 62,
+    "image": "/images/products/lavender-laundry-soap-bar-1.jpg",
+    "description": "Storage, laundry and everyday home goods."
   }
 ]

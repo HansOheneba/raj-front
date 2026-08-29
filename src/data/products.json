@@ -3,7 +3,7 @@
     "id": "p-001",
     "slug": "golden-basmati-rice",
     "name": "Golden Basmati Rice",
-    "departmentId": "dep-pantry",
+    "departmentId": "dep-pantry-rice",
     "brand": "Raj pantry",
     "description": "Aged long-grain basmati. Cooks separate and stays fluffy. UK packed. Sold by weight.",
     "imageUrls": [
@@ -50,13 +50,21 @@
     ],
     "tags": [
       "sale"
+    ],
+    "keywords": [
+      "rice",
+      "basmati",
+      "long grain",
+      "white rice",
+      "staple",
+      "pantry"
     ]
   },
   {
     "id": "p-002",
     "slug": "jasmine-fragrant-rice",
     "name": "Jasmine Fragrant Rice",
-    "departmentId": "dep-pantry",
+    "departmentId": "dep-pantry-rice",
     "brand": "Raj pantry",
     "description": "Soft, floral jasmine rice milled for everyday pots. Packed in the UK.",
     "imageUrls": [
@@ -90,13 +98,21 @@
         "price": 165,
         "stock": 18
       }
+    ],
+    "keywords": [
+      "rice",
+      "jasmine",
+      "fragrant rice",
+      "thai rice",
+      "staple",
+      "pantry"
     ]
   },
   {
     "id": "p-003",
     "slug": "brown-long-grain-rice",
     "name": "Brown Long Grain Rice",
-    "departmentId": "dep-pantry",
+    "departmentId": "dep-pantry-rice",
     "description": "Wholegrain rice with the bran left on. Nutty, slower cook.",
     "imageUrls": [
       "/images/products/brown-long-grain-rice-1.jpg",
@@ -109,13 +125,21 @@
     "popularity": 71,
     "attributes": {
       "Weight": "5kg"
-    }
+    },
+    "keywords": [
+      "rice",
+      "brown rice",
+      "wholegrain",
+      "whole grain",
+      "staple",
+      "pantry"
+    ]
   },
   {
     "id": "p-004",
     "slug": "extra-virgin-olive-oil",
     "name": "Extra Virgin Olive Oil",
-    "departmentId": "dep-pantry",
+    "departmentId": "dep-pantry-oils",
     "description": "First cold press in dark glass. For finishing, not deep frying.",
     "imageUrls": [
       "/images/products/extra-virgin-olive-oil-1.jpg",
@@ -157,13 +181,20 @@
         "price": 165,
         "stock": 6
       }
+    ],
+    "keywords": [
+      "olive oil",
+      "extra virgin",
+      "cooking oil",
+      "salad oil",
+      "evoo"
     ]
   },
   {
     "id": "p-005",
     "slug": "coconut-cooking-oil",
     "name": "Coconut Cooking Oil",
-    "departmentId": "dep-pantry",
+    "departmentId": "dep-pantry-oils",
     "description": "Refined coconut oil for high-heat cooking. Neutral taste.",
     "imageUrls": [
       "/images/products/coconut-cooking-oil-1.jpg",
@@ -176,13 +207,18 @@
     "popularity": 66,
     "attributes": {
       "Volume": "500ml"
-    }
+    },
+    "keywords": [
+      "coconut oil",
+      "cooking oil",
+      "frying oil"
+    ]
   },
   {
     "id": "p-006",
     "slug": "cold-pressed-groundnut-oil",
     "name": "Cold Pressed Groundnut Oil",
-    "departmentId": "dep-pantry",
+    "departmentId": "dep-pantry-oils",
     "description": "Peanut oil with a light roast note. For frying and marinades.",
     "imageUrls": [
       "/images/products/cold-pressed-groundnut-oil-1.jpg",
@@ -195,13 +231,18 @@
     "popularity": 61,
     "attributes": {
       "Volume": "500ml"
-    }
+    },
+    "keywords": [
+      "groundnut oil",
+      "peanut oil",
+      "cooking oil"
+    ]
   },
   {
     "id": "p-007",
     "slug": "greek-style-yoghurt",
     "name": "Greek Style Yoghurt",
-    "departmentId": "dep-pantry",
+    "departmentId": "dep-pantry-dairy",
     "description": "Thick strained yoghurt. Keep chilled after opening.",
     "imageUrls": [
       "/images/products/greek-style-yoghurt-1.jpg",
@@ -217,13 +258,19 @@
     },
     "tags": [
       "new"
+    ],
+    "keywords": [
+      "yogurt",
+      "yoghurt",
+      "greek yogurt",
+      "dairy"
     ]
   },
   {
     "id": "p-008",
     "slug": "full-cream-milk-powder",
     "name": "Full Cream Milk Powder",
-    "departmentId": "dep-pantry",
+    "departmentId": "dep-pantry-dairy",
     "description": "Whole milk powder for tea, baking and emergency fridge days.",
     "imageUrls": [
       "/images/products/full-cream-milk-powder-1.jpg",
@@ -236,13 +283,19 @@
     "popularity": 68,
     "attributes": {
       "Weight": "900g"
-    }
+    },
+    "keywords": [
+      "milk powder",
+      "powdered milk",
+      "full cream",
+      "dairy"
+    ]
   },
   {
     "id": "p-009",
     "slug": "evaporated-milk-six-pack",
     "name": "Evaporated Milk Six Pack",
-    "departmentId": "dep-pantry",
+    "departmentId": "dep-pantry-dairy",
     "description": "Shelf-stable evaporated milk. Six tins in a wrap.",
     "imageUrls": [
       "/images/products/evaporated-milk-six-pack-1.jpg",
@@ -255,13 +308,19 @@
     "popularity": 69,
     "attributes": {
       "Pack": "6 x 410g"
-    }
+    },
+    "keywords": [
+      "evaporated milk",
+      "tinned milk",
+      "canned milk",
+      "dairy"
+    ]
   },
   {
     "id": "p-010",
     "slug": "velvet-musk-body-mist",
     "name": "Velvet Musk Body Mist",
-    "departmentId": "dep-beauty",
+    "departmentId": "dep-beauty-body",
     "description": "Light body mist for after lotion. UK retail bottle.",
     "imageUrls": [
       "/images/products/velvet-musk-body-mist-1.jpg",
@@ -274,13 +333,21 @@
     "popularity": 77,
     "attributes": {
       "Volume": "200ml"
-    }
+    },
+    "keywords": [
+      "body spray",
+      "body mist",
+      "perfume",
+      "fragrance",
+      "musk",
+      "scent"
+    ]
   },
   {
     "id": "p-011",
     "slug": "saffron-cedar-attar-oil",
     "name": "Saffron Cedar Attar Oil",
-    "departmentId": "dep-beauty",
+    "departmentId": "dep-beauty-scent",
     "description": "Concentrated perfume oil. Roll on pulse points. Boxed.",
     "imageUrls": [
       "/images/products/saffron-cedar-attar-oil-1.jpg",
@@ -296,13 +363,21 @@
     },
     "tags": [
       "new"
+    ],
+    "keywords": [
+      "perfume oil",
+      "attar",
+      "fragrance",
+      "concentrated perfume",
+      "oud",
+      "scent"
     ]
   },
   {
     "id": "p-012",
     "slug": "rose-nectar-eau-de-toilette",
     "name": "Rose Nectar Eau de Toilette",
-    "departmentId": "dep-beauty",
+    "departmentId": "dep-beauty-scent",
     "description": "Soft rose EDT for daytime. Retail boxed 50ml.",
     "imageUrls": [
       "/images/products/rose-nectar-eau-de-toilette-1.jpg",
@@ -315,13 +390,21 @@
     "popularity": 63,
     "attributes": {
       "Volume": "50ml"
-    }
+    },
+    "keywords": [
+      "perfume",
+      "fragrance",
+      "edt",
+      "eau de toilette",
+      "rose perfume",
+      "scent"
+    ]
   },
   {
     "id": "p-013",
     "slug": "ivory-linen-wrap-dress",
     "name": "Ivory Linen Wrap Dress",
-    "departmentId": "dep-fashion",
+    "departmentId": "dep-fashion-dresses",
     "description": "Cotton-linen wrap cut for warm weather. UK goods.",
     "imageUrls": [
       "/images/products/ivory-linen-wrap-dress-1.jpg",
@@ -363,13 +446,20 @@
         "price": 420,
         "stock": 3
       }
+    ],
+    "keywords": [
+      "dress",
+      "wrap dress",
+      "linen dress",
+      "women clothing",
+      "outfit"
     ]
   },
   {
     "id": "p-014",
     "slug": "cotton-poplin-day-dress",
     "name": "Cotton Poplin Day Dress",
-    "departmentId": "dep-fashion",
+    "departmentId": "dep-fashion-dresses",
     "description": "Crisp poplin day dress. Machine wash cold.",
     "imageUrls": [
       "/images/products/cotton-poplin-day-dress-1.jpg",
@@ -411,13 +501,20 @@
         "price": 380,
         "stock": 2
       }
+    ],
+    "keywords": [
+      "dress",
+      "day dress",
+      "cotton dress",
+      "women clothing",
+      "outfit"
     ]
   },
   {
     "id": "p-015",
     "slug": "ankara-print-a-line-dress",
     "name": "Ankara Print A-Line Dress",
-    "departmentId": "dep-fashion",
+    "departmentId": "dep-fashion-dresses",
     "description": "A-line wax print dress. Pattern placement varies by piece.",
     "imageUrls": [
       "/images/products/ankara-print-a-line-dress-1.jpg",
@@ -462,13 +559,20 @@
     ],
     "tags": [
       "new"
+    ],
+    "keywords": [
+      "dress",
+      "ankara",
+      "print dress",
+      "women clothing",
+      "outfit"
     ]
   },
   {
     "id": "p-016",
     "slug": "terracotta-midi-shirt-dress",
     "name": "Terracotta Midi Shirt Dress",
-    "departmentId": "dep-fashion",
+    "departmentId": "dep-fashion-dresses",
     "description": "Midi shirt dress with a belt. USA goods.",
     "imageUrls": [
       "/images/products/terracotta-midi-shirt-dress-1.jpg",
@@ -485,13 +589,20 @@
     },
     "tags": [
       "sale"
+    ],
+    "keywords": [
+      "dress",
+      "shirt dress",
+      "midi dress",
+      "women clothing",
+      "outfit"
     ]
   },
   {
     "id": "p-017",
     "slug": "pleated-chiffon-maxi-dress",
     "name": "Pleated Chiffon Maxi Dress",
-    "departmentId": "dep-fashion",
+    "departmentId": "dep-fashion-dresses",
     "description": "Floaty chiffon maxi. Lined to the knee.",
     "imageUrls": [
       "/images/products/pleated-chiffon-maxi-dress-1.jpg",
@@ -504,13 +615,20 @@
     "popularity": 59,
     "attributes": {
       "Length": "Maxi"
-    }
+    },
+    "keywords": [
+      "dress",
+      "maxi dress",
+      "chiffon",
+      "women clothing",
+      "outfit"
+    ]
   },
   {
     "id": "p-018",
     "slug": "structured-shoulder-bag",
     "name": "Structured Shoulder Bag",
-    "departmentId": "dep-fashion",
+    "departmentId": "dep-fashion-bags",
     "brand": "UK goods",
     "description": "Black structured shoulder bag. Not affiliated with any high-street house. Check the listing photos.",
     "imageUrls": [
@@ -550,13 +668,19 @@
           "/images/products/structured-shoulder-bag-2.jpg"
         ]
       }
+    ],
+    "keywords": [
+      "handbag",
+      "purse",
+      "shoulder bag",
+      "ladies bag"
     ]
   },
   {
     "id": "p-019",
     "slug": "canvas-court-sneakers",
     "name": "Canvas Court Sneakers",
-    "departmentId": "dep-footwear",
+    "departmentId": "dep-footwear-sneakers",
     "description": "Low court sneakers. USA stock. Pick colour and size.",
     "imageUrls": [
       "/images/products/canvas-court-sneakers-1.jpg",
@@ -652,13 +776,21 @@
     ],
     "tags": [
       "new"
+    ],
+    "keywords": [
+      "shoes",
+      "trainers",
+      "canvas shoes",
+      "tennis shoes",
+      "kicks",
+      "footwear"
     ]
   },
   {
     "id": "p-020",
     "slug": "pool-slides",
     "name": "Pool Slides",
-    "departmentId": "dep-footwear",
+    "departmentId": "dep-footwear-slides",
     "description": "Moulded footbed slides. Size 40 is waiting on a restock.",
     "imageUrls": [
       "/images/products/pool-slides-1.jpg",
@@ -700,13 +832,20 @@
         "price": 249,
         "stock": 0
       }
+    ],
+    "keywords": [
+      "slippers",
+      "sandals",
+      "shoes",
+      "pool slides",
+      "footwear"
     ]
   },
   {
     "id": "p-021",
     "slug": "leather-loafer",
     "name": "Leather Loafer",
-    "departmentId": "dep-footwear",
+    "departmentId": "dep-footwear-loafers",
     "description": "Penny loafer in smooth leather. UK last. Currently sold out.",
     "imageUrls": [
       "/images/products/leather-loafer-1.jpg",
@@ -739,6 +878,13 @@
         "price": 1290,
         "stock": 0
       }
+    ],
+    "keywords": [
+      "shoes",
+      "penny loafer",
+      "formal shoes",
+      "leather shoes",
+      "footwear"
     ]
   },
   {
@@ -758,7 +904,16 @@
     "popularity": 79,
     "attributes": {
       "Volume": "100ml"
-    }
+    },
+    "keywords": [
+      "perfume",
+      "cologne",
+      "parfum",
+      "oud",
+      "mens perfume",
+      "fragrance",
+      "scent"
+    ]
   },
   {
     "id": "p-023",
@@ -777,13 +932,22 @@
     "popularity": 58,
     "attributes": {
       "Volume": "100ml"
-    }
+    },
+    "keywords": [
+      "perfume",
+      "parfum",
+      "womens perfume",
+      "jasmine",
+      "floral",
+      "fragrance",
+      "scent"
+    ]
   },
   {
     "id": "p-024",
     "slug": "woven-storage-basket",
     "name": "Woven Storage Basket",
-    "departmentId": "dep-household",
+    "departmentId": "dep-household-home",
     "description": "Open weave basket for market runs and laundry.",
     "imageUrls": [
       "/images/products/woven-storage-basket-1.jpg",
@@ -796,13 +960,20 @@
     "popularity": 54,
     "attributes": {
       "Material": "Rattan"
-    }
+    },
+    "keywords": [
+      "laundry basket",
+      "storage basket",
+      "rattan",
+      "hamper",
+      "basket"
+    ]
   },
   {
     "id": "p-025",
     "slug": "ceramic-serving-bowl-set",
     "name": "Ceramic Serving Bowl Set",
-    "departmentId": "dep-household",
+    "departmentId": "dep-household-kitchen",
     "description": "Set of stoneware bowls. Dishwasher safe.",
     "imageUrls": [
       "/images/products/ceramic-serving-bowl-set-1.jpg",
@@ -819,13 +990,20 @@
     },
     "tags": [
       "sale"
+    ],
+    "keywords": [
+      "serving bowls",
+      "dishes",
+      "tableware",
+      "stoneware",
+      "kitchen"
     ]
   },
   {
     "id": "p-026",
     "slug": "bamboo-kitchen-utensil-set",
     "name": "Bamboo Kitchen Utensil Set",
-    "departmentId": "dep-household",
+    "departmentId": "dep-household-kitchen",
     "description": "Spoon, spatula and ladle in one bundle.",
     "imageUrls": [
       "/images/products/bamboo-kitchen-utensil-set-1.jpg",
@@ -838,13 +1016,20 @@
     "popularity": 52,
     "attributes": {
       "Set": "4 pieces"
-    }
+    },
+    "keywords": [
+      "kitchen tools",
+      "cooking utensils",
+      "spatula",
+      "spoon",
+      "kitchen"
+    ]
   },
   {
     "id": "p-027",
     "slug": "linen-tea-towels",
     "name": "Linen Tea Towels",
-    "departmentId": "dep-household",
+    "departmentId": "dep-household-kitchen",
     "description": "Pair of linen towels. Soften after the first wash.",
     "imageUrls": [
       "/images/products/linen-tea-towels-1.jpg",
@@ -857,13 +1042,20 @@
     "popularity": 48,
     "attributes": {
       "Pack": "2"
-    }
+    },
+    "keywords": [
+      "kitchen towels",
+      "dish towels",
+      "tea towel",
+      "linen",
+      "kitchen"
+    ]
   },
   {
     "id": "p-028",
     "slug": "lavender-laundry-soap-bar",
     "name": "Lavender Laundry Soap Bar",
-    "departmentId": "dep-household",
+    "departmentId": "dep-household-home",
     "description": "Solid laundry soap with lavender. UK goods.",
     "imageUrls": [
       "/images/products/lavender-laundry-soap-bar-1.jpg",
@@ -876,6 +1068,13 @@
     "popularity": 50,
     "attributes": {
       "Weight": "200g"
-    }
+    },
+    "keywords": [
+      "laundry soap",
+      "detergent",
+      "washing soap",
+      "laundry bar",
+      "soap"
+    ]
   }
 ]

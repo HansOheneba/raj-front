@@ -5,7 +5,7 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ProductGrid } from "@/components/catalog/ProductGrid";
 import { ShopListing } from "@/components/shop/ShopToolbar";
-import { getDepartmentBySlug, listDepartments, listProducts } from "@/lib/catalog";
+import { getDepartmentBySlug, listDepartments, listProducts, parentOf } from "@/lib/catalog";
 import { parseShopParams, type RawSearchParams } from "@/lib/searchParams";
 
 type PageProps = {
@@ -45,22 +45,24 @@ export default async function DepartmentPage({ params, searchParams }: PageProps
     maxPrice: filters.maxPrice,
   });
 
+  const parent = parentOf(departments, department);
+  const crumbs = [
+    { label: "Home", href: "/" },
+    { label: "Shop", href: "/shop" },
+    ...(parent ? [{ label: parent.name, href: `/shop/${parent.slug}` }] : []),
+    { label: department.name },
+  ];
+
   return (
     <div className="shell py-8">
-      <Breadcrumbs
-        items={[
-          { label: "Home", href: "/" },
-          { label: "Shop", href: "/shop" },
-          { label: department.name },
-        ]}
-      />
+      <Breadcrumbs items={crumbs} />
       <div className="mt-4 pb-6">
         <SectionHeading
           as="h1"
           title={department.name}
           description={department.description}
-          href="/shop"
-          linkLabel="All departments"
+          href={parent ? `/shop/${parent.slug}` : "/shop"}
+          linkLabel={parent ? parent.name : "All departments"}
         />
       </div>
       <ShopListing departments={departments} lockedDepartment={slug} resultCount={items.length}>
