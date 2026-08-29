@@ -57,6 +57,11 @@ export function Footer({ departments }: { departments: Department[] }) {
           <h3 className="label-xs text-ink">Help</h3>
           <ul className="flex flex-col gap-1.5">
             <li>
+              <Link href="/track" className="text-[13px] text-ink-muted hover:text-clay">
+                Track an order
+              </Link>
+            </li>
+            <li>
               <Link href="/contact" className="text-[13px] text-ink-muted hover:text-clay">
                 Support
               </Link>

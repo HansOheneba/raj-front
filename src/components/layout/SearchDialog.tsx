@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
 import { PriceTag } from "@/components/ui/PriceTag";
-import { mockCatalog } from "@/lib/catalog/mock";
 import type { Department, Product } from "@/lib/catalog";
+import { searchProducts } from "@/lib/catalog";
 
 export function SearchDialog({
   open,
@@ -48,7 +48,7 @@ export function SearchDialog({
       return;
     }
     let cancelled = false;
-    void mockCatalog.searchProducts(term, 6).then((items) => {
+    void searchProducts(term, 6).then((items) => {
       if (!cancelled) setResults(items);
     });
     return () => {

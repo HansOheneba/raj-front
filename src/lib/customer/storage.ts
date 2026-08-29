@@ -1,10 +1,11 @@
+import { parseGhanaPhone } from "@/lib/phone";
 import type { Customer, CustomerAddress, CustomerRecord } from "./types";
 
 const CUSTOMERS_KEY = "raj-kollections.customers.v2";
 const SESSION_KEY = "raj-kollections.session.v1";
 const ADDRESSES_KEY = "raj-kollections.addresses.v1";
 
-export const normalizeEmail = (email: string) => email.trim().toLowerCase();
+export const normalizePhone = (phone: string) => parseGhanaPhone(phone);
 
 export async function hashValue(value: string): Promise<string> {
   const data = new TextEncoder().encode(value);
@@ -27,28 +28,29 @@ const isRecord = (value: unknown): value is CustomerRecord => {
   return (
     typeof row.id === "string" &&
     typeof row.name === "string" &&
-    typeof row.email === "string" &&
-    typeof row.phone === "string"
+    typeof row.phone === "string" &&
+    (row.email === undefined || typeof row.email === "string")
   );
 };
 
-const isAddress = (value: unknown): value is CustomerAddress => {
+const isAddress = (value: unknown): value is CustomerAddress & { district?: string } => {
   if (typeof value !== "object" || value === null) return false;
-  const row = value as CustomerAddress;
+  const row = value as CustomerAddress & { district?: string };
   return (
     typeof row.id === "string" &&
     typeof row.name === "string" &&
     typeof row.phone === "string" &&
     typeof row.region === "string" &&
-    typeof row.line === "string"
+    typeof row.line === "string" &&
+    (row.city === undefined || typeof row.city === "string")
   );
 };
 
 export const toCustomer = (record: CustomerRecord): Customer => ({
   id: record.id,
   name: record.name,
-  email: record.email,
   phone: record.phone,
+  email: record.email,
 });
 
 export const readCustomers = (): CustomerRecord[] => {
@@ -99,11 +101,28 @@ const readAddressStore = (): AddressStore => {
     const store: AddressStore = {};
     for (const [customerId, items] of Object.entries(parsed)) {
       if (!Array.isArray(items)) continue;
-      store[customerId] = items.filter(isAddress).map((item) => ({
-        ...item,
-        label: item.label?.trim() || "Saved address",
-        isDefault: Boolean(item.isDefault),
-      }));
+      store[customerId] = items.filter(isAddress).map((item) => {
+        const legacyDistrict =
+          typeof (item as { district?: unknown }).district === "string"
+            ? (item as { district: string }).district.trim()
+            : "";
+        const city =
+          typeof item.city === "string" && item.city.trim()
+            ? item.city.trim()
+            : legacyDistrict;
+
+        return {
+          id: item.id,
+          label: item.label?.trim() || "Saved address",
+          name: item.name,
+          phone: item.phone,
+          region: item.region,
+          city,
+          line: item.line,
+          mapsUrl: item.mapsUrl,
+          isDefault: Boolean(item.isDefault),
+        };
+      });
     }
     return store;
   } catch {

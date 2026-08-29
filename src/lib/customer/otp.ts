@@ -7,8 +7,8 @@ export function randomOtp() {
   return Array.from(bytes, (byte) => String(byte % 10)).join("");
 }
 
-export async function hashOtp(email: string, code: string) {
-  return hashValue(`${email}:${code}`);
+export async function hashOtp(phone: string, code: string) {
+  return hashValue(`${phone}:${code}`);
 }
 
 export function normalizeOtp(value: string) {

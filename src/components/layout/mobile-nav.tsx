@@ -504,10 +504,14 @@ function MobileNavSheet({
       </nav>
 
       <div className="grid grid-cols-2 gap-2 px-4 pt-3">
-        <UtilityLink href="/account" label="Account" active={pathname === "/account"}>
+        <UtilityLink href="/account" label="Account" active={pathname.startsWith("/account")}>
           <User size={20} strokeWidth={1.5} />
         </UtilityLink>
-        <UtilityLink href="/saved" label="Your list" active={pathname === "/saved"}>
+        <UtilityLink
+          href="/saved"
+          label="Your list"
+          active={pathname === "/saved" || pathname.startsWith("/account/saved")}
+        >
           <Heart size={20} strokeWidth={1.5} />
         </UtilityLink>
         <UtilityLink href="/about" label="About" active={pathname === "/about"}>

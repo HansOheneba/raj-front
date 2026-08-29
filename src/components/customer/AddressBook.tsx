@@ -8,12 +8,11 @@ import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/PhoneInput";
 import { Textarea } from "@/components/ui/textarea";
-import { ghanaRegions } from "@/lib/customer/regions";
+import { LocationFields } from "./LocationFields";
+import { MapsLinkField } from "./MapsLinkField";
+import { formatLocationLine } from "@/lib/customer/locations";
 import { formatGhanaPhone } from "@/lib/phone";
 import type { AddressInput, CustomerAddress } from "@/lib/customer/types";
-
-const selectClassName =
-  "h-9 w-full rounded-md border border-input bg-cream px-3 text-[13px] outline-none";
 
 function AddressFormFields({
   address,
@@ -49,22 +48,12 @@ function AddressFormFields({
           defaultValue={address?.phone}
         />
       </Field>
-      <Field label="Region" htmlFor={`${idPrefix}-region`} required>
-        <select
-          id={`${idPrefix}-region`}
-          name="region"
-          required
-          defaultValue={address?.region ?? ghanaRegions[0]}
-          className={selectClassName}
-        >
-          {ghanaRegions.map((region) => (
-            <option key={region} value={region}>
-              {region}
-            </option>
-          ))}
-        </select>
-      </Field>
-      <Field label="Delivery address" htmlFor={`${idPrefix}-line`} required>
+      <LocationFields
+        idPrefix={idPrefix}
+        defaultRegion={address?.region}
+        defaultCity={address?.city}
+      />
+      <Field label="Street address" htmlFor={`${idPrefix}-line`} required hint="House number, street, landmark.">
         <Textarea
           id={`${idPrefix}-line`}
           name="line"
@@ -74,20 +63,7 @@ function AddressFormFields({
           placeholder="Street, landmark, directions"
         />
       </Field>
-      <Field
-        label="Google Maps link"
-        htmlFor={`${idPrefix}-maps`}
-        hint="Optional. Paste a pin so delivery can find you faster."
-      >
-        <Input
-          id={`${idPrefix}-maps`}
-          name="mapsUrl"
-          type="url"
-          inputMode="url"
-          placeholder="https://maps.app.goo.gl/..."
-          defaultValue={address?.mapsUrl}
-        />
-      </Field>
+      <MapsLinkField id={`${idPrefix}-maps`} defaultValue={address?.mapsUrl} />
     </>
   );
 }
@@ -98,12 +74,13 @@ function draftFromForm(form: FormData): AddressInput {
     name: String(form.get("name") ?? ""),
     phone: String(form.get("phone") ?? ""),
     region: String(form.get("region") ?? ""),
+    city: String(form.get("city") ?? ""),
     line: String(form.get("line") ?? ""),
     mapsUrl: String(form.get("mapsUrl") ?? ""),
   };
 }
 
-export function AddressBook() {
+export function AddressBook({ showHeading = true }: { showHeading?: boolean }) {
   const { customer, addresses, addAddress, updateAddress, removeAddress, setDefaultAddress } =
     useCustomer();
   const [mode, setMode] = useState<{ type: "idle" } | { type: "add" } | { type: "edit"; id: string }>({
@@ -128,9 +105,9 @@ export function AddressBook() {
   };
 
   return (
-    <section className="mt-8">
+    <section className={showHeading ? "mt-8" : "mt-6"}>
       <div className="flex items-center justify-between gap-3">
-        <h3 className="label-xs text-ink">Addresses</h3>
+        {showHeading ? <h3 className="label-xs text-ink">Addresses</h3> : <span />}
         {mode.type === "idle" && (
           <button
             type="button"
@@ -186,8 +163,11 @@ export function AddressBook() {
                   <p className="mt-1 text-[13px] text-ink">{address.name}</p>
                   <p className="text-[12px] text-ink-muted">{formatGhanaPhone(address.phone)}</p>
                   <p className="mt-1 text-[13px] leading-relaxed text-ink-muted">
-                    {address.line}
-                    <span className="block">{address.region}</span>
+                    {formatLocationLine({
+                      line: address.line,
+                      city: address.city,
+                      region: address.region,
+                    })}
                   </p>
                   {address.mapsUrl && (
                     <a

@@ -1,20 +1,11 @@
 import type { Metadata } from "next";
-import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
-import { AccountView } from "@/components/account/AccountView";
+import { OrdersView } from "@/components/account/OrdersView";
 
 export const metadata: Metadata = {
-  title: "Account",
-  description: "Sign in to check out and save items for later.",
+  title: "My orders",
+  description: "See what you have ordered and where it is.",
 };
 
-export default function AccountPage() {
-  return (
-    <div className="shell py-8">
-      <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Account" }]} />
-      <h1 className="mt-4 text-2xl sm:text-[1.75rem]">Account</h1>
-      <div className="mt-8">
-        <AccountView />
-      </div>
-    </div>
-  );
+export default function AccountOrdersPage() {
+  return <OrdersView />;
 }

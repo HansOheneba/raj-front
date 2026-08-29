@@ -4,7 +4,7 @@ export const siteConfig = {
   tagline: "Everyday essentials, and a little more.",
   description:
     "Everyday essentials, beauty, fashion and hard-to-find favourites. Shop from anywhere in Ghana.",
-  url: "https://rajkollections.example",
+  url: "https://www.rajkollections.com",
   currency: "GHS",
   locale: "en-GH",
   freeShippingThreshold: 350,

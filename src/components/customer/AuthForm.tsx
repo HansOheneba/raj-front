@@ -1,12 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PhoneInput } from "@/components/ui/PhoneInput";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useCustomer } from "./CustomerProvider";
+import { siteConfig } from "@/lib/config";
 import { OTP_LENGTH_DIGITS } from "@/lib/customer/otp";
+import { formatGhanaPhone } from "@/lib/phone";
 import type { AuthReason } from "@/lib/customer/types";
 
 const copy: Record<AuthReason, { signinTitle: string; signupTitle: string }> = {
@@ -22,9 +25,30 @@ const copy: Record<AuthReason, { signinTitle: string; signupTitle: string }> = {
     signinTitle: "Sign in",
     signupTitle: "Create an account",
   },
+  order: {
+    signinTitle: "Sign in to see this order",
+    signupTitle: "Create an account to see this order",
+  },
 };
 
 type Step = "form" | "otp" | "profile";
+
+function AuthHelpLinks() {
+  return (
+    <p className="text-[13px] text-ink-muted">
+      <Link href="/track" className="text-clay underline decoration-clay/40 underline-offset-2">
+        Track an order
+      </Link>
+      {" · "}
+      <a
+        href={`https://wa.me/${siteConfig.contact.whatsapp}`}
+        className="text-clay underline decoration-clay/40 underline-offset-2"
+      >
+        Need a hand?
+      </a>
+    </p>
+  );
+}
 
 export function AuthForm({
   reason,
@@ -36,22 +60,22 @@ export function AuthForm({
   const { requestCode, verifyCode, completeProfile } = useCustomer();
   const [mode, setMode] = useState<"signup" | "signin">("signin");
   const [step, setStep] = useState<Step>("form");
-  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [previewCode, setPreviewCode] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const text = copy[reason];
 
-  const sendCode = async (nextEmail: string, profile?: { name: string; phone: string }) => {
+  const sendCode = async (nextPhone: string, profile?: { name: string }) => {
     setError(null);
     setPending(true);
-    const result = await requestCode({ email: nextEmail, profile });
+    const result = await requestCode({ phone: nextPhone, profile });
     setPending(false);
     if (!result.ok) {
       setError(result.message);
       return false;
     }
-    setEmail(nextEmail);
+    setPhone(nextPhone);
     setPreviewCode(result.code ?? null);
     setStep("otp");
     return true;
@@ -60,15 +84,14 @@ export function AuthForm({
   const submitForm = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
-    const nextEmail = String(form.get("email") ?? "");
+    const nextPhone = String(form.get("phone") ?? "");
     if (mode === "signup") {
-      await sendCode(nextEmail, {
+      await sendCode(nextPhone, {
         name: String(form.get("name") ?? ""),
-        phone: String(form.get("phone") ?? ""),
       });
       return;
     }
-    await sendCode(nextEmail);
+    await sendCode(nextPhone);
   };
 
   const submitOtp = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -76,7 +99,7 @@ export function AuthForm({
     setError(null);
     setPending(true);
     const form = new FormData(event.currentTarget);
-    const result = await verifyCode(email, String(form.get("code") ?? ""));
+    const result = await verifyCode(phone, String(form.get("code") ?? ""));
     setPending(false);
     if (!result.ok) {
       setError(result.message);
@@ -96,7 +119,6 @@ export function AuthForm({
     const form = new FormData(event.currentTarget);
     const result = await completeProfile({
       name: String(form.get("name") ?? ""),
-      phone: String(form.get("phone") ?? ""),
     });
     setPending(false);
     if (!result.ok) {
@@ -113,13 +135,15 @@ export function AuthForm({
     setError(null);
   };
 
+  const displayPhone = formatGhanaPhone(phone);
+
   if (step === "otp") {
     return (
       <form onSubmit={submitOtp} className="flex flex-col gap-3.5">
         <div>
           <h2 className="text-xl">Enter your code</h2>
           <p className="mt-1.5 text-[13px] leading-relaxed text-ink-muted">
-            We sent a code to {email}.
+            We sent a code to {displayPhone}.
           </p>
         </div>
 
@@ -153,7 +177,7 @@ export function AuthForm({
         </Button>
 
         <p className="text-[13px] text-ink-muted">
-          Wrong email?{" "}
+          Wrong number?{" "}
           <button
             type="button"
             onClick={() => reset(mode)}
@@ -162,6 +186,7 @@ export function AuthForm({
             Use a different one
           </button>
         </p>
+        <AuthHelpLinks />
       </form>
     );
   }
@@ -172,19 +197,17 @@ export function AuthForm({
         <div>
           <h2 className="text-xl">Finish creating your account</h2>
           <p className="mt-1.5 text-[13px] leading-relaxed text-ink-muted">
-            Add your name and phone.
+            Add your name so we know what to call you.
           </p>
         </div>
         <Field label="Full name" htmlFor="account-name" required>
           <Input id="account-name" name="name" required autoComplete="name" />
         </Field>
-        <Field label="Phone" htmlFor="account-phone" required>
-          <PhoneInput id="account-phone" name="phone" required />
-        </Field>
         {error && <p className="text-[13px] text-sale">{error}</p>}
         <Button type="submit" disabled={pending}>
           {pending ? "Saving" : "Create account"}
         </Button>
+        <AuthHelpLinks />
       </form>
     );
   }
@@ -195,37 +218,31 @@ export function AuthForm({
         <h2 className="text-xl">{mode === "signup" ? text.signupTitle : text.signinTitle}</h2>
         <p className="mt-1.5 text-[13px] leading-relaxed text-ink-muted">
           {mode === "signup"
-            ? "Enter your details and we'll send you a code."
-            : "Enter your email and we'll send you a code."}
+            ? "Enter your details and we'll text you a code."
+            : "Enter your phone number and we'll text you a code."}
         </p>
       </div>
 
       {mode === "signup" && (
-        <>
-          <Field label="Full name" htmlFor="account-name" required>
-            <Input id="account-name" name="name" required autoComplete="name" />
-          </Field>
-          <Field label="Phone" htmlFor="account-phone" required>
-            <PhoneInput id="account-phone" name="phone" required />
-          </Field>
-        </>
+        <Field label="Full name" htmlFor="account-name" required>
+          <Input id="account-name" name="name" required autoComplete="name" />
+        </Field>
       )}
 
-      <Field label="Email" htmlFor="account-email" required>
-        <Input
-          id="account-email"
-          name="email"
-          type="email"
+      <Field label="Phone" htmlFor="account-phone" required>
+        <PhoneInput
+          id="account-phone"
+          name="phone"
           required
-          autoComplete="email"
-          defaultValue={email}
+          autoComplete="tel"
+          defaultValue={phone}
         />
       </Field>
 
       {error && <p className="text-[13px] text-sale">{error}</p>}
 
       <Button type="submit" disabled={pending}>
-        {pending ? "Sending code" : "Email me a code"}
+        {pending ? "Sending code" : "Text me a code"}
       </Button>
 
       <p className="text-[13px] text-ink-muted">
@@ -238,6 +255,7 @@ export function AuthForm({
           {mode === "signup" ? "Sign in" : "Create an account"}
         </button>
       </p>
+      <AuthHelpLinks />
     </form>
   );
 }

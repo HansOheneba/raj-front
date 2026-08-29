@@ -1,8 +1,8 @@
 export type Customer = {
   id: string;
   name: string;
-  email: string;
   phone: string;
+  email?: string;
 };
 
 export type CustomerRecord = Customer & {
@@ -15,6 +15,7 @@ export type CustomerAddress = {
   name: string;
   phone: string;
   region: string;
+  city: string;
   line: string;
   mapsUrl?: string;
   isDefault: boolean;
@@ -25,18 +26,18 @@ export type AddressInput = {
   name: string;
   phone: string;
   region: string;
+  city: string;
   line: string;
   mapsUrl?: string;
   isDefault?: boolean;
 };
 
-export type AuthReason = "checkout" | "saved" | "account";
+export type AuthReason = "checkout" | "saved" | "account" | "order";
 
 export type RequestCodeInput = {
-  email: string;
+  phone: string;
   profile?: {
     name: string;
-    phone: string;
   };
 };
 

@@ -1,3 +1,5 @@
+export const GOOGLE_MAPS_OPEN_URL = "https://maps.google.com/maps";
+
 export function normalizeMapsUrl(
   value: string,
 ): { ok: true; url?: string } | { ok: false } {

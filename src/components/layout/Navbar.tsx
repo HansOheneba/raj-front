@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Heart, Menu, Search, ShoppingBag, User } from "lucide-react";
+import { Heart, Menu, MessageCircle, Search, ShoppingBag, User } from "lucide-react";
 import { BrandLogo } from "./BrandLogo";
 import { SearchDialog } from "./SearchDialog";
 import { useMobileNav } from "./mobile-nav";
@@ -71,15 +71,6 @@ export function Navbar({ departments }: { departments: Department[] }) {
                 {department.name}
               </Link>
             ))}
-            <Link
-              href="/contact"
-              className={cn(
-                "label-sm rounded-md px-2.5 py-2 transition-colors duration-[var(--duration-ui)] ease-[var(--ease-out)] hover:text-clay",
-                isActive("/contact") ? "text-clay" : "text-ink-muted",
-              )}
-            >
-              Support
-            </Link>
           </nav>
 
           <div className="flex items-center gap-0.5">
@@ -107,6 +98,17 @@ export function Navbar({ departments }: { departments: Department[] }) {
                   {savedCount > 99 ? "99+" : savedCount}
                 </span>
               )}
+            </Link>
+
+            <Link
+              href="/contact"
+              aria-label="Support"
+              className={cn(
+                "flex h-8 w-8 items-center justify-center rounded-md transition-colors duration-[var(--duration-ui)] ease-[var(--ease-out)] hover:bg-sand hover:text-ink",
+                isActive("/contact") ? "text-clay" : "text-ink-muted",
+              )}
+            >
+              <MessageCircle size={16} strokeWidth={1.5} />
             </Link>
 
             <Link
