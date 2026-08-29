@@ -216,3 +216,16 @@
     display: none;
   }
 }
+
+/* iOS Safari zooms focused inputs below 16px and does not zoom back out. */
+@layer base {
+  @media (max-width: 1023px) {
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="hidden"]):not(
+        [type="button"]
+      ):not([type="submit"]),
+    select,
+    textarea {
+      font-size: 1rem;
+    }
+  }
+}

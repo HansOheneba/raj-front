@@ -124,7 +124,7 @@ export function SearchDialog({
             autoComplete="off"
             autoCorrect="off"
             spellCheck={false}
-            className="h-11 w-full bg-transparent text-[13px] text-ink placeholder:text-ink-faint focus:outline-none"
+            className="h-11 w-full bg-transparent text-base text-ink placeholder:text-ink-faint focus:outline-none"
           />
           <button
             type="button"
