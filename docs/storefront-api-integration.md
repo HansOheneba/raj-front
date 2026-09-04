@@ -100,6 +100,9 @@ The portal exposes **clean paths** (no `/api` prefix). Internally these rewrite 
 | `POST` | `/auth/complete-profile` | session | Set name after first login |
 | `POST` | `/auth/logout` | session | Clear session |
 | `GET` | `/customer/me` | session | Current customer |
+| `PATCH` | `/customer/me` | session | Update profile fields (birthday, email) |
+| `POST` | `/customer/email/resend` | session | Resend email confirmation link |
+| `POST` | `/auth/verify-email` | token | Confirm email from inbox link |
 | `GET/POST` | `/customer/addresses` | session | List / create addresses |
 | `PATCH/DELETE` | `/customer/addresses/:id` | session | Update / delete address |
 | `GET/PUT/POST` | `/customer/saved` | session | Saved items (wishlist) |
@@ -109,6 +112,7 @@ The portal exposes **clean paths** (no `/api` prefix). Internally these rewrite 
 
 - **—** = no login required
 - **session** = `rk_customer_session` HttpOnly cookie (set by `/auth/verify-code`)
+- **token** = one-time email confirmation token in the JSON body (no session)
 - **optional** = works logged in or as guest; logged-in orders link to the account
 
 ---
@@ -267,7 +271,9 @@ interface Customer {
   id: string;    // external id, e.g. "cust-abc123"
   name: string;
   phone: string;
-  email?: string;
+  email?: string;          // verified only
+  pendingEmail?: string;   // submitted, awaiting confirmation
+  dateOfBirth?: string;    // "YYYY-MM-DD"
 }
 ```
 
@@ -296,6 +302,163 @@ POST /auth/logout
 ```
 
 Returns `204`, clears cookie.
+
+---
+
+## Customer profile (birthday and email)
+
+**Do not collect these at sign-up.** Phone OTP + name stays the create-account flow. The storefront collects birthday and email on **Your details** (`/account/profile`) after the account exists.
+
+An account with only `name` + `phone` is complete. Birthday and email can be added later.
+
+### Customer shape (extended)
+
+Every `Customer` payload (`GET /customer/me`, auth responses, `PATCH /customer/me`) should include:
+
+```ts
+interface Customer {
+  id: string;
+  name: string;
+  phone: string;
+  email?: string;          // verified address only; omit if none
+  pendingEmail?: string;   // last submitted address, awaiting the inbox link
+  dateOfBirth?: string;    // "YYYY-MM-DD"; omit if unset
+}
+```
+
+| Field | Required | Notes |
+|-------|----------|-------|
+| `email` | no | **Verified only.** Never put an unconfirmed address here. Used for order-update mail. |
+| `pendingEmail` | no | Set while a confirmation is outstanding. Clear on success or if they drop the address. |
+| `dateOfBirth` | no | Calendar date, no time, no timezone. Store as `date`, not `timestamptz`. |
+
+Changing email does **not** replace `email` until they click the link. Keep the old verified address live until then.
+
+Checkout `POST /orders` still has its own `customer.email` on the order snapshot. That is contact for that order. Do **not** copy checkout email onto the account, and do **not** start verification from checkout.
+
+### Update profile
+
+```http
+PATCH /customer/me
+Content-Type: application/json
+
+{
+  "dateOfBirth": "1998-09-04",
+  "email": "ama@example.com"
+}
+```
+
+Session required. All fields optional; omitted keys mean “leave as-is”. Send JSON `null` to clear.
+
+```ts
+interface ProfileUpdate {
+  dateOfBirth?: string | null;  // "YYYY-MM-DD", or null to clear
+  email?: string | null;        // start confirmation, or null to clear both email + pendingEmail
+}
+```
+
+Response `200`: `{ ...Customer }` (the updated customer, same shape as `GET /customer/me`).
+
+**`dateOfBirth`**
+
+- Format: `YYYY-MM-DD` only.
+- Must be a real calendar date, not in the future, year ≥ 1900.
+- Store the date as given. Do not convert through UTC (that shifts the day).
+- `null` clears it.
+- Invalid date → `400` `{ "error": "Enter a real date of birth." }`
+- Portal may later use month+day for birthday offers. Storefront does not apply discounts from this field.
+
+**`email`**
+
+- Trim, lowercase, max 254 chars, must look like an email.
+- `null` clears `email` and `pendingEmail`, and invalidates unused confirmation tokens.
+- If it matches the current verified `email`, clear `pendingEmail` and do not send mail.
+- If it matches current `pendingEmail`, do **not** send another mail (use resend for that).
+- Otherwise treat it as a new address:
+  1. If another customer already has this **verified** `email` → `409` `{ "error": "That email is already on another account." }`
+  2. Set `pendingEmail` to the new address. Leave existing `email` as-is.
+  3. Invalidate previous tokens for this customer.
+  4. Create a single-use token (32+ random bytes, **hash at rest**, TTL **24 hours**).
+  5. Send the confirmation mail (see below).
+- Response still `200` with `pendingEmail` set. Do not wait for the click.
+
+**Name / phone:** not updated here. Phone is the login identity.
+
+### Resend confirmation
+
+```http
+POST /customer/email/resend
+```
+
+Session required. No body.
+
+- No `pendingEmail` → `400` `{ "error": "Add an email first, then we'll send a confirmation link." }`
+- Rate limit: **3 sends per customer per hour**, **3 per email address per hour**. Over limit → `429`.
+- Issues a new token, invalidates the old one, sends again.
+- Response `200`: updated `Customer`.
+
+### Confirmation mail
+
+From a store address (`hello@rajkollections.com` or similar). Customer-facing, not a portal URL.
+
+**Link the storefront, not the admin host:**
+
+```
+https://www.rajkollections.com/verify-email?token={rawToken}
+```
+
+Local / staging: use that storefront origin. Query param name is `token`.
+
+Suggested subject: `Confirm your email`. Body: short, the link, “this expires in 24 hours”. Do not mention Hubtel, the portal, or OTP.
+
+Only send this mail after they save an email on **Your details**. Never from sign-up.
+
+### Confirm the link
+
+```http
+POST /auth/verify-email
+Content-Type: application/json
+
+{ "token": "…" }
+```
+
+**No session required.** The token is the credential. Works if they open the mail on a different device.
+
+| Outcome | Status | Body |
+|---------|--------|------|
+| Valid token | `200` | `{ "ok": true, "customer"?: Customer }` |
+| Missing/unknown/used token | `400` | `{ "error": "That confirmation link is no longer valid." }` |
+| Expired | `400` | `{ "error": "That link has expired. Request a new one from your account." }` |
+| Email now verified on another account | `409` | `{ "error": "That email is already on another account." }` |
+
+On success:
+
+1. Set `email` to the pending address, clear `pendingEmail`.
+2. Mark token used (single use).
+3. Include `customer` **only** if the request also has that customer’s session cookie. Otherwise `{ "ok": true }` with no customer (do not leak the profile).
+
+Storefront page: `GET /verify-email?token=` → `POST /auth/verify-email`.
+
+### Suggested columns
+
+```text
+customers.date_of_birth     date            null
+customers.email             text            null, unique where not null
+customers.email_verified_at timestamptz     null
+customers.pending_email     text            null
+
+email_confirmation_tokens
+  id, customer_id, email, token_hash, expires_at, used_at, created_at
+```
+
+`Customer.email` in the API is populated only when `email_verified_at` is set. Until then expose `pendingEmail`.
+
+### What the storefront already does
+
+- Sign-up / sign-in unchanged (phone + name).
+- `/account/profile` — date picker + email (collected after sign-up, not at registration).
+- `/verify-email?token=` — public page, calls `POST /auth/verify-email`.
+- Local demo (no `NEXT_PUBLIC_API_URL`) confirms via an on-page link.
 
 ---
 
@@ -515,7 +678,8 @@ interface SavedItem {
 ### Wire next (HTTP client may exist — connect it)
 
 - [ ] Auth: request-code → verify-code → complete-profile
-- [ ] Account: `/customer/me`, addresses CRUD
+- [ ] Account: `/customer/me`, `PATCH /customer/me`, addresses CRUD
+- [ ] Email confirmation: `POST /customer/email/resend`, `POST /auth/verify-email`
 - [ ] Saved items sync
 
 ### Stay local (no API)

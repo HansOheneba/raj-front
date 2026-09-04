@@ -4,9 +4,11 @@ import type {
   AddressInput,
   Customer,
   CustomerAddress,
+  ProfileUpdate,
   RequestCodeInput,
   RequestCodeResponse,
   VerifyCodeResult,
+  VerifyEmailResult,
 } from "./types";
 
 export function normalizeCustomerAddress(address: CustomerAddress): CustomerAddress {
@@ -64,6 +66,24 @@ export async function logout(): Promise<void> {
 
 export async function getCustomer(): Promise<Customer> {
   return api("/customer/me");
+}
+
+export async function updateCustomerProfile(input: ProfileUpdate): Promise<Customer> {
+  return api("/customer/me", {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function resendEmailVerification(): Promise<Customer> {
+  return api("/customer/email/resend", { method: "POST" });
+}
+
+export async function verifyEmailToken(token: string): Promise<VerifyEmailResult> {
+  return api("/auth/verify-email", {
+    method: "POST",
+    body: JSON.stringify({ token }),
+  });
 }
 
 export async function listAddresses(): Promise<CustomerAddress[]> {

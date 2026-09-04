@@ -4,7 +4,7 @@ import { AccountShell } from "@/components/account/AccountShell";
 
 export const metadata: Metadata = {
   title: "Account",
-  description: "Your orders, addresses and saved items.",
+  description: "Your orders, addresses, saved items and account details.",
 };
 
 export default function AccountLayout({ children }: { children: ReactNode }) {

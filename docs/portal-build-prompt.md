@@ -75,7 +75,8 @@ Implement every endpoint in `admin-api-contract.json` → `endpoints`, in three 
 **Phase 2**
 
 - `POST /auth/request-code`, `/auth/verify-code`, `/auth/complete-profile`, `/auth/logout`
-- `GET /customer/me`, address CRUD, saved-items CRUD
+- `GET /customer/me`, `PATCH /customer/me`, `POST /customer/email/resend`, `POST /auth/verify-email`
+- Address CRUD, saved-items CRUD
 
 **Phase 3**
 

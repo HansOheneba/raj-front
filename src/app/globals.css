@@ -16,6 +16,8 @@
   --color-line: #eae5dd;
   --color-line-strong: #ddd5c9;
   --color-sale: #7a2e2e;
+  --color-success: #2f6b52;
+  --color-success-soft: #e6f0eb;
 
   --color-background: var(--color-ivory);
   --color-foreground: var(--color-ink);

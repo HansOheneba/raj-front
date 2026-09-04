@@ -20,8 +20,17 @@ import {
   deleteAddress as deleteAddressApi,
   getCustomer as getCustomerApi,
   listAddresses as listAddressesApi,
+  resendEmailVerification as resendEmailVerificationApi,
   updateAddress as updateAddressApi,
+  updateCustomerProfile as updateCustomerProfileApi,
+  verifyEmailToken as verifyEmailTokenApi,
 } from "@/lib/customer/http";
+import {
+  EMAIL_TOKEN_TTL_MS,
+  isValidDateOfBirth,
+  isValidEmail,
+  normalizeEmail,
+} from "@/lib/customer/profile";
 import { parseGhanaPhone, toApiPhone } from "@/lib/phone";
 import { hashOtp, OTP_MAX_ATTEMPTS, OTP_TTL_MS, normalizeOtp, randomOtp } from "@/lib/customer/otp";
 import {
@@ -29,10 +38,12 @@ import {
   normalizePhone,
   readAddresses,
   readCustomers,
+  readEmailTokens,
   readSessionId,
   toCustomer,
   writeAddresses,
   writeCustomers,
+  writeEmailTokens,
   writeSessionId,
 } from "@/lib/customer/storage";
 import type {
@@ -41,9 +52,12 @@ import type {
   AuthResult,
   Customer,
   CustomerAddress,
+  ProfileUpdate,
+  ProfileUpdateResult,
   RequestCodeInput,
   RequestCodeResult,
   VerifyCodeResult,
+  VerifyEmailResult,
 } from "@/lib/customer/types";
 
 type OtpChallenge = {
@@ -61,6 +75,9 @@ type CustomerContextValue = {
   requestCode: (input: RequestCodeInput) => Promise<RequestCodeResult>;
   verifyCode: (phone: string, code: string) => Promise<VerifyCodeResult>;
   completeProfile: (input: { name: string }) => Promise<AuthResult>;
+  updateProfile: (input: ProfileUpdate) => Promise<ProfileUpdateResult>;
+  resendEmailVerification: () => Promise<ProfileUpdateResult>;
+  verifyEmail: (token: string) => Promise<VerifyEmailResult>;
   addAddress: (input: AddressInput) => Promise<AuthResult>;
   updateAddress: (id: string, input: AddressInput) => Promise<AuthResult>;
   removeAddress: (id: string) => Promise<void>;
@@ -119,6 +136,62 @@ function findCustomerByPhone(phone: string) {
   return readCustomers().find((row) => row.phone === phone);
 }
 
+function persistCustomerRecord(record: Customer & { createdAt?: string }) {
+  const nextRecord = {
+    ...record,
+    createdAt: record.createdAt ?? new Date().toISOString(),
+  };
+  writeCustomers([...readCustomers().filter((row) => row.id !== nextRecord.id), nextRecord]);
+  return nextRecord;
+}
+
+function dropEmailTokensForCustomer(customerId: string) {
+  writeEmailTokens(readEmailTokens().filter((row) => row.customerId !== customerId));
+}
+
+function issueEmailToken(customerId: string, email: string) {
+  dropEmailTokensForCustomer(customerId);
+  const token = crypto.randomUUID();
+  writeEmailTokens([
+    ...readEmailTokens(),
+    {
+      token,
+      customerId,
+      email,
+      expiresAt: Date.now() + EMAIL_TOKEN_TTL_MS,
+    },
+  ]);
+  return `/verify-email?token=${encodeURIComponent(token)}`;
+}
+
+function validatedProfileUpdate(
+  input: ProfileUpdate,
+): { ok: true; update: ProfileUpdate } | { ok: false; message: string } {
+  const update: ProfileUpdate = {};
+
+  if (input.dateOfBirth !== undefined) {
+    if (input.dateOfBirth === null || input.dateOfBirth === "") {
+      update.dateOfBirth = null;
+    } else if (!isValidDateOfBirth(input.dateOfBirth)) {
+      return { ok: false, message: "Enter a real date of birth." };
+    } else {
+      update.dateOfBirth = input.dateOfBirth;
+    }
+  }
+
+  if (input.email !== undefined) {
+    if (input.email === null || input.email.trim() === "") {
+      update.email = null;
+    } else if (!isValidEmail(input.email)) {
+      return { ok: false, message: "Enter a valid email address." };
+    } else {
+      update.email = normalizeEmail(input.email);
+    }
+  }
+
+  return { ok: true, update };
+}
+
 async function loadApiSession(
   setCustomer: (customer: Customer | null) => void,
   setAddresses: (addresses: CustomerAddress[]) => void,
@@ -144,6 +217,8 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
   const [authReason, setAuthReason] = useState<AuthReason>("account");
   const challengeRef = useRef<OtpChallenge | null>(null);
   const verifiedPhoneRef = useRef<string | null>(null);
+  const customerRef = useRef<Customer | null>(null);
+  customerRef.current = customer;
 
   useEffect(() => {
     if (isApiEnabled) {
@@ -346,6 +421,133 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
     return { ok: true };
   }, [persistCustomer]);
 
+  const updateProfile = useCallback(async (input: ProfileUpdate): Promise<ProfileUpdateResult> => {
+    if (!customer) return { ok: false, message: "Sign in to update your details." };
+    const validated = validatedProfileUpdate(input);
+    if (!validated.ok) return validated;
+    if (validated.update.dateOfBirth === undefined && validated.update.email === undefined) {
+      return { ok: true };
+    }
+
+    if (isApiEnabled) {
+      try {
+        const nextCustomer = await updateCustomerProfileApi(validated.update);
+        setCustomer(nextCustomer);
+        return { ok: true };
+      } catch (error) {
+        return {
+          ok: false,
+          message: error instanceof Error ? error.message : "Could not save your details. Try again.",
+        };
+      }
+    }
+
+    const customers = readCustomers();
+    const current = customers.find((row) => row.id === customer.id);
+    if (!current) return { ok: false, message: "Sign in to update your details." };
+
+    let demoVerifyUrl: string | undefined;
+    const next = { ...current };
+
+    if (validated.update.dateOfBirth !== undefined) {
+      next.dateOfBirth = validated.update.dateOfBirth ?? undefined;
+    }
+
+    if (validated.update.email !== undefined) {
+      if (validated.update.email === null) {
+        next.email = undefined;
+        next.pendingEmail = undefined;
+        dropEmailTokensForCustomer(current.id);
+      } else if (validated.update.email === current.email) {
+        next.pendingEmail = undefined;
+        dropEmailTokensForCustomer(current.id);
+      } else if (validated.update.email === current.pendingEmail) {
+        demoVerifyUrl = issueEmailToken(current.id, validated.update.email);
+      } else if (customers.some((row) => row.id !== current.id && row.email === validated.update.email)) {
+        return { ok: false, message: "That email is already on another account." };
+      } else {
+        next.pendingEmail = validated.update.email;
+        demoVerifyUrl = issueEmailToken(current.id, validated.update.email);
+      }
+    }
+
+    persistCustomerRecord(next);
+    setCustomer(toCustomer(next));
+    return demoVerifyUrl ? { ok: true, demoVerifyUrl } : { ok: true };
+  }, [customer]);
+
+  const resendEmailVerification = useCallback(async (): Promise<ProfileUpdateResult> => {
+    if (!customer) return { ok: false, message: "Sign in to confirm your email." };
+
+    if (isApiEnabled) {
+      try {
+        const nextCustomer = await resendEmailVerificationApi();
+        setCustomer(nextCustomer);
+        return { ok: true };
+      } catch (error) {
+        return {
+          ok: false,
+          message: error instanceof Error ? error.message : "Could not send that email. Try again.",
+        };
+      }
+    }
+
+    if (!customer.pendingEmail) {
+      return { ok: false, message: "Add an email first, then we'll send a confirmation link." };
+    }
+
+    return { ok: true, demoVerifyUrl: issueEmailToken(customer.id, customer.pendingEmail) };
+  }, [customer]);
+
+  const verifyEmail = useCallback(async (token: string): Promise<VerifyEmailResult> => {
+    const trimmed = token.trim();
+    if (!trimmed) return { ok: false, message: "That confirmation link is missing its code." };
+
+    if (isApiEnabled) {
+      try {
+        const result = await verifyEmailTokenApi(trimmed);
+        if (result.customer) {
+          setCustomer(result.customer);
+        } else if (customerRef.current) {
+          try {
+            setCustomer(await getCustomerApi());
+          } catch {
+            // Token may belong to another session; leave current customer as-is.
+          }
+        }
+        return { ok: true, customer: result.customer };
+      } catch (error) {
+        return {
+          ok: false,
+          message: error instanceof Error ? error.message : "That confirmation link is no longer valid.",
+        };
+      }
+    }
+
+    const match = readEmailTokens().find((row) => row.token === trimmed);
+    if (!match) return { ok: false, message: "That confirmation link is no longer valid." };
+    if (Date.now() > match.expiresAt) {
+      writeEmailTokens(readEmailTokens().filter((row) => row.token !== trimmed));
+      return { ok: false, message: "That link has expired. Request a new one from your account." };
+    }
+
+    const customers = readCustomers();
+    const record = customers.find((row) => row.id === match.customerId);
+    if (!record) return { ok: false, message: "That confirmation link is no longer valid." };
+    if (customers.some((row) => row.id !== record.id && row.email === match.email)) {
+      return { ok: false, message: "That email is already on another account." };
+    }
+
+    const next = { ...record, email: match.email, pendingEmail: undefined };
+    persistCustomerRecord(next);
+    writeEmailTokens(readEmailTokens().filter((row) => row.token !== trimmed));
+    const current = customerRef.current;
+    if (!current || current.id === next.id) {
+      setCustomer(toCustomer(next));
+    }
+    return { ok: true, customer: toCustomer(next) };
+  }, []);
+
   const persistAddresses = useCallback(
     (next: CustomerAddress[]) => {
       if (!customer) return;
@@ -527,6 +729,9 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
       requestCode,
       verifyCode,
       completeProfile,
+      updateProfile,
+      resendEmailVerification,
+      verifyEmail,
       addAddress,
       updateAddress,
       removeAddress,
@@ -544,6 +749,9 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
       requestCode,
       verifyCode,
       completeProfile,
+      updateProfile,
+      resendEmailVerification,
+      verifyEmail,
       addAddress,
       updateAddress,
       removeAddress,

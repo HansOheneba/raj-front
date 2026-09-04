@@ -4,6 +4,7 @@ import type { Customer, CustomerAddress, CustomerRecord } from "./types";
 const CUSTOMERS_KEY = "raj-kollections.customers.v2";
 const SESSION_KEY = "raj-kollections.session.v1";
 const ADDRESSES_KEY = "raj-kollections.addresses.v1";
+const EMAIL_TOKENS_KEY = "raj-kollections.email-tokens.v1";
 
 export const normalizePhone = (phone: string) => parseGhanaPhone(phone);
 
@@ -29,7 +30,9 @@ const isRecord = (value: unknown): value is CustomerRecord => {
     typeof row.id === "string" &&
     typeof row.name === "string" &&
     typeof row.phone === "string" &&
-    (row.email === undefined || typeof row.email === "string")
+    (row.email === undefined || typeof row.email === "string") &&
+    (row.pendingEmail === undefined || typeof row.pendingEmail === "string") &&
+    (row.dateOfBirth === undefined || typeof row.dateOfBirth === "string")
   );
 };
 
@@ -51,7 +54,43 @@ export const toCustomer = (record: CustomerRecord): Customer => ({
   name: record.name,
   phone: record.phone,
   email: record.email,
+  pendingEmail: record.pendingEmail,
+  dateOfBirth: record.dateOfBirth,
 });
+
+export type EmailVerificationToken = {
+  token: string;
+  customerId: string;
+  email: string;
+  expiresAt: number;
+};
+
+const isEmailToken = (value: unknown): value is EmailVerificationToken => {
+  if (typeof value !== "object" || value === null) return false;
+  const row = value as EmailVerificationToken;
+  return (
+    typeof row.token === "string" &&
+    typeof row.customerId === "string" &&
+    typeof row.email === "string" &&
+    typeof row.expiresAt === "number"
+  );
+};
+
+export const readEmailTokens = (): EmailVerificationToken[] => {
+  try {
+    const raw = window.localStorage.getItem(EMAIL_TOKENS_KEY);
+    if (!raw) return [];
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(isEmailToken);
+  } catch {
+    return [];
+  }
+};
+
+export const writeEmailTokens = (tokens: EmailVerificationToken[]) => {
+  window.localStorage.setItem(EMAIL_TOKENS_KEY, JSON.stringify(tokens));
+};
 
 export const readCustomers = (): CustomerRecord[] => {
   try {
