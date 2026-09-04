@@ -43,6 +43,11 @@ export type RequestCodeInput = {
 
 export type AuthResult = { ok: true } | { ok: false; message: string };
 
+export type RequestCodeResponse = { ok: boolean; code?: string; demoCode?: string };
+
 export type RequestCodeResult = AuthResult & { code?: string };
 
-export type VerifyCodeResult = AuthResult & { needsProfile?: boolean };
+export type VerifyCodeResult = AuthResult & {
+  needsProfile?: boolean;
+  customer?: Customer;
+};

@@ -35,13 +35,20 @@ export function OrdersView() {
     setLoading(true);
 
     const load = async () => {
-      const items =
-        tab === "current"
-          ? await listCurrentOrdersForCustomer(customer.id)
-          : await listOrdersForCustomer(customer.id);
-      if (!cancelled) {
-        setOrders(items);
-        setLoading(false);
+      try {
+        const items =
+          tab === "current"
+            ? await listCurrentOrdersForCustomer(customer.id)
+            : await listOrdersForCustomer(customer.id);
+        if (!cancelled) {
+          setOrders(items);
+          setLoading(false);
+        }
+      } catch {
+        if (!cancelled) {
+          setOrders([]);
+          setLoading(false);
+        }
       }
     };
 

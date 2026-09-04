@@ -17,10 +17,12 @@ export {
 } from "./format";
 export { trackingTimeline } from "./timeline";
 
+import { isApiEnabled } from "@/lib/api";
+
 import * as httpOrders from "./http";
 import * as localOrders from "./local";
 
-const useHttp = Boolean(process.env.NEXT_PUBLIC_API_URL);
+const useHttp = isApiEnabled;
 
 export async function listOrdersForCustomer(customerId: string) {
   return useHttp

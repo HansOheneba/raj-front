@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { MapPin, Plus } from "lucide-react";
+import { Loader2, MapPin, Plus } from "lucide-react";
+import { toast } from "sonner";
 import { useCustomer } from "./CustomerProvider";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { PhoneInput } from "@/components/ui/PhoneInput";
+import { AddressPhoneField } from "./AddressPhoneField";
 import { Textarea } from "@/components/ui/textarea";
 import { LocationFields } from "./LocationFields";
 import { MapsLinkField } from "./MapsLinkField";
@@ -17,9 +18,11 @@ import type { AddressInput, CustomerAddress } from "@/lib/customer/types";
 function AddressFormFields({
   address,
   idPrefix,
+  accountPhone,
 }: {
   address?: CustomerAddress;
   idPrefix: string;
+  accountPhone: string;
 }) {
   return (
     <>
@@ -40,14 +43,11 @@ function AddressFormFields({
           defaultValue={address?.name}
         />
       </Field>
-      <Field label="Phone" htmlFor={`${idPrefix}-phone`} required>
-        <PhoneInput
-          id={`${idPrefix}-phone`}
-          name="phone"
-          required
-          defaultValue={address?.phone}
-        />
-      </Field>
+      <AddressPhoneField
+        idPrefix={idPrefix}
+        accountPhone={accountPhone}
+        defaultPhone={address?.phone}
+      />
       <LocationFields
         idPrefix={idPrefix}
         defaultRegion={address?.region}
@@ -87,21 +87,40 @@ export function AddressBook({ showHeading = true }: { showHeading?: boolean }) {
     type: "idle",
   });
   const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
 
   if (!customer) return null;
 
   const editing = mode.type === "edit" ? addresses.find((item) => item.id === mode.id) : undefined;
+  const isEditing = mode.type === "edit";
 
-  const submit = (event: React.FormEvent<HTMLFormElement>) => {
+  const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const draft = draftFromForm(new FormData(event.currentTarget));
-    const result = mode.type === "edit" ? updateAddress(mode.id, draft) : addAddress(draft);
-    if (!result.ok) {
-      setError(result.message);
-      return;
-    }
+    if (pending) return;
+
+    const form = event.currentTarget;
+    const draft = draftFromForm(new FormData(form));
+    setPending(true);
     setError(null);
-    setMode({ type: "idle" });
+
+    try {
+      const result = isEditing ? await updateAddress(mode.id, draft) : await addAddress(draft);
+      if (!result.ok) {
+        setError(result.message);
+        toast.error(result.message);
+        return;
+      }
+
+      toast.success(isEditing ? "Address updated." : "Address saved.");
+      setMode({ type: "idle" });
+    } catch (caught) {
+      const message =
+        caught instanceof Error ? caught.message : "Could not save that address. Try again.";
+      setError(message);
+      toast.error(message);
+    } finally {
+      setPending(false);
+    }
   };
 
   return (
@@ -124,17 +143,32 @@ export function AddressBook({ showHeading = true }: { showHeading?: boolean }) {
       </div>
 
       {mode.type !== "idle" ? (
-        <form onSubmit={submit} className="mt-3 flex flex-col gap-3.5 border-t border-line pt-4">
+        <form
+          noValidate
+          onSubmit={submit}
+          className="mt-3 flex flex-col gap-3.5 border-t border-line pt-4"
+        >
           <AddressFormFields
             idPrefix={mode.type === "edit" ? "edit-address" : "new-address"}
             address={editing}
+            accountPhone={customer.phone}
           />
           {error && <p className="text-[13px] text-sale">{error}</p>}
           <div className="flex flex-wrap items-center gap-2">
-            <Button type="submit">{mode.type === "edit" ? "Save address" : "Add address"}</Button>
+            <Button type="submit" disabled={pending} className="gap-2">
+              {pending ? (
+                <>
+                  <Loader2 size={15} className="animate-spin" />
+                  {isEditing ? "Saving" : "Adding"}
+                </>
+              ) : (
+                isEditing ? "Save address" : "Add address"
+              )}
+            </Button>
             <Button
               type="button"
               variant="ghost"
+              disabled={pending}
               onClick={() => {
                 setError(null);
                 setMode({ type: "idle" });

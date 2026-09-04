@@ -11,6 +11,7 @@ export function PhoneInput({
   defaultValue,
   autoComplete = "tel-national",
   className,
+  onE164Change,
 }: {
   id?: string;
   name?: string;
@@ -18,9 +19,16 @@ export function PhoneInput({
   defaultValue?: string;
   autoComplete?: string;
   className?: string;
+  onE164Change?: (value: string | null) => void;
 }) {
   const [national, setNational] = useState(() => ghanaNationalNumber(defaultValue ?? ""));
   const e164 = parseGhanaPhone(national);
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const nextNational = ghanaNationalNumber(event.target.value);
+    setNational(nextNational);
+    onE164Change?.(parseGhanaPhone(nextNational));
+  };
 
   return (
     <div
@@ -33,7 +41,7 @@ export function PhoneInput({
       <input
         id={id}
         value={national}
-        onChange={(event) => setNational(ghanaNationalNumber(event.target.value))}
+        onChange={handleChange}
         required={required}
         minLength={9}
         maxLength={9}

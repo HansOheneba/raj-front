@@ -15,13 +15,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { createOrder, type CheckoutCustomer } from "@/lib/checkout";
+import { isApiEnabled } from "@/lib/api";
 import { LocationFields } from "@/components/customer/LocationFields";
 import { MapsLinkField } from "@/components/customer/MapsLinkField";
 import { formatLocationLine } from "@/lib/customer/locations";
 import { formatPrice } from "@/lib/utils";
 
 const NEW_ADDRESS = "new";
-const PAYMENT_DELAY_MS = 1500;
 
 type CheckoutStep = "details" | "payment" | "success";
 
@@ -30,6 +30,7 @@ type PlacedOrder = {
   orderId: string;
   trackingNumber: string;
   total: number;
+  paymentMessage?: string;
 };
 
 type PendingCheckout = {
@@ -83,6 +84,10 @@ export function CheckoutForm() {
         </p>
         <dl className="mt-5 flex flex-col gap-2 border-y border-line py-3 text-left text-[13px]">
           <div className="flex justify-between gap-3">
+            <dt className="text-ink-muted">Tracking</dt>
+            <dd className="tabular-nums text-ink">{placed.trackingNumber}</dd>
+          </div>
+          <div className="flex justify-between gap-3">
             <dt className="text-ink-muted">Reference</dt>
             <dd className="tabular-nums text-ink">{placed.reference}</dd>
           </div>
@@ -91,6 +96,9 @@ export function CheckoutForm() {
             <dd className="tabular-nums text-ink">{formatPrice(placed.total)}</dd>
           </div>
         </dl>
+        {placed.paymentMessage && (
+          <p className="mt-4 text-[13px] leading-relaxed text-ink-muted">{placed.paymentMessage}</p>
+        )}
         <div className="mt-6 flex flex-col gap-2">
           <div className="grid grid-cols-2 gap-2">
             <Button asChild className="w-full">
@@ -154,7 +162,7 @@ export function CheckoutForm() {
     setStep("payment");
   };
 
-  const saveCheckoutAddress = (checkout: CheckoutCustomer) => {
+  const saveCheckoutAddress = async (checkout: CheckoutCustomer) => {
     const draft = {
       label: addresses.length === 0 ? "Home" : checkout.city,
       name: checkout.name,
@@ -174,7 +182,7 @@ export function CheckoutForm() {
     );
 
     if (!duplicate) {
-      addAddress(draft);
+      await addAddress(draft);
     }
   };
 
@@ -182,8 +190,6 @@ export function CheckoutForm() {
     if (!pendingCheckout || !customer) return;
     setError(null);
     setPending(true);
-
-    await new Promise((resolve) => window.setTimeout(resolve, PAYMENT_DELAY_MS));
 
     const result = await createOrder({
       customerId: customer.id,
@@ -213,7 +219,7 @@ export function CheckoutForm() {
     }
 
     if (pendingCheckout.isNewAddress) {
-      saveCheckoutAddress(pendingCheckout.customer);
+      await saveCheckoutAddress(pendingCheckout.customer);
     }
 
     clear();
@@ -223,6 +229,7 @@ export function CheckoutForm() {
       orderId: result.orderId,
       trackingNumber: result.trackingNumber,
       total,
+      paymentMessage: result.paymentMessage,
     });
     setStep("success");
   };
@@ -235,7 +242,9 @@ export function CheckoutForm() {
             <p className="label-xs text-clay">Secure checkout</p>
             <h2 className="mt-1 text-xl">Pay with Mobile Money</h2>
             <p className="mt-1.5 text-[13px] text-ink-muted">
-              Demo payment. Your order will be placed once payment is confirmed.
+              {isApiEnabled
+                ? "Approve the Mobile Money prompt on your phone to complete payment."
+                : "Demo payment. Your order will be placed once payment is confirmed."}
             </p>
           </div>
 

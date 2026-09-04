@@ -1,20 +1,8 @@
+import { apiPublic, apiPublicOptional } from "@/lib/api";
 import type { CatalogClient, Department, Product, ProductListResult, ProductQuery } from "./types";
 
-const baseUrl = () => {
-  const url = process.env.NEXT_PUBLIC_API_URL;
-  if (!url) {
-    throw new Error("NEXT_PUBLIC_API_URL is not set");
-  }
-  return url.replace(/\/$/, "");
-};
-
-async function getJson<T>(path: string): Promise<T> {
-  const response = await fetch(`${baseUrl()}${path}`, { next: { revalidate: 60 } });
-  if (!response.ok) {
-    throw new Error(`Admin catalog request failed: ${response.status} ${path}`);
-  }
-  return response.json() as Promise<T>;
-}
+/** Shown when the portal has a record with no artwork yet. */
+const IMAGE_FALLBACK = "/logos/raj-logo.png";
 
 function queryString(query: ProductQuery): string {
   const params = new URLSearchParams();
@@ -29,14 +17,51 @@ function queryString(query: ProductQuery): string {
   return encoded ? `?${encoded}` : "";
 }
 
+/** Components index imageUrls[0] directly, so every product needs at least one image. */
+function withImages(product: Product): Product {
+  const imageUrls = Array.isArray(product.imageUrls)
+    ? product.imageUrls.filter((url) => Boolean(url))
+    : [];
+  return imageUrls.length > 0 ? { ...product, imageUrls } : { ...product, imageUrls: [IMAGE_FALLBACK] };
+}
+
+function withDepartmentImage(department: Department): Department {
+  return department.image ? department : { ...department, image: IMAGE_FALLBACK };
+}
+
 export const httpCatalog: CatalogClient = {
-  listDepartments: () => getJson<Department[]>("/catalog/departments"),
-  getDepartmentBySlug: (slug) => getJson<Department | undefined>(`/catalog/departments/${slug}`),
-  listProducts: (query = {}) => getJson<ProductListResult>(`/catalog/products${queryString(query)}`),
-  getProductBySlug: (slug) => getJson<Product | undefined>(`/catalog/products/${slug}`),
-  getProductById: (id) => getJson<Product | undefined>(`/catalog/products/id/${id}`),
-  getRelated: (product, limit = 4) =>
-    getJson<Product[]>(`/catalog/products/${product.slug}/related?limit=${limit}`),
-  searchProducts: (term, limit = 6) =>
-    getJson<Product[]>(`/catalog/search?q=${encodeURIComponent(term)}&limit=${limit}`),
+  listDepartments: async () =>
+    (await apiPublic<Department[]>("/catalog/departments")).map(withDepartmentImage),
+
+  getDepartmentBySlug: async (slug) => {
+    const department = await apiPublicOptional<Department>(`/catalog/departments/${slug}`);
+    return department ? withDepartmentImage(department) : undefined;
+  },
+
+  listProducts: async (query = {}) => {
+    const result = await apiPublic<ProductListResult>(`/catalog/products${queryString(query)}`);
+    return { ...result, items: result.items.map(withImages) };
+  },
+
+  getProductBySlug: async (slug) => {
+    const product = await apiPublicOptional<Product>(`/catalog/products/${slug}`);
+    return product ? withImages(product) : undefined;
+  },
+
+  getProductById: async (id) => {
+    const product = await apiPublicOptional<Product>(`/catalog/products/id/${id}`);
+    return product ? withImages(product) : undefined;
+  },
+
+  getRelated: async (product, limit = 4) =>
+    (await apiPublic<Product[]>(`/catalog/products/${product.slug}/related?limit=${limit}`)).map(
+      withImages,
+    ),
+
+  searchProducts: async (term, limit = 6) =>
+    (
+      await apiPublic<Product[]>(
+        `/catalog/search?q=${encodeURIComponent(term)}&limit=${limit}`,
+      )
+    ).map(withImages),
 };

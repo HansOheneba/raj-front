@@ -1,92 +1,113 @@
+import { ApiError, api } from "@/lib/api";
+import { parseGhanaPhone, toApiPhone } from "@/lib/phone";
 import type {
   AddressInput,
   Customer,
   CustomerAddress,
   RequestCodeInput,
+  RequestCodeResponse,
   VerifyCodeResult,
 } from "./types";
 
-const baseUrl = () => {
-  const url = process.env.NEXT_PUBLIC_API_URL;
-  if (!url) {
-    throw new Error("NEXT_PUBLIC_API_URL is not set");
-  }
-  return url.replace(/\/$/, "");
-};
+export function normalizeCustomerAddress(address: CustomerAddress): CustomerAddress {
+  const phone = parseGhanaPhone(address.phone) ?? address.phone;
 
-async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${baseUrl()}${path}`, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...init?.headers,
-    },
-    cache: "no-store",
-  });
-  if (!response.ok) {
-    throw new Error(`Customer request failed: ${response.status} ${path}`);
-  }
-  if (response.status === 204) {
-    return undefined as T;
-  }
-  return response.json() as Promise<T>;
+  return {
+    ...address,
+    label: address.label?.trim() || "Saved address",
+    phone,
+    city: address.city?.trim() ?? "",
+    mapsUrl: address.mapsUrl?.trim() || undefined,
+  };
 }
 
-export async function requestAuthCode(input: RequestCodeInput): Promise<{ ok: boolean }> {
-  return requestJson("/auth/request-code", {
+function serializeAddressInput(input: AddressInput): AddressInput {
+  const phone = toApiPhone(input.phone);
+  if (!phone) {
+    throw new ApiError("Enter a valid phone number.", 400);
+  }
+
+  const mapsUrl = input.mapsUrl?.trim();
+
+  return {
+    ...input,
+    label: input.label.trim() || "Saved address",
+    phone,
+    mapsUrl: mapsUrl || undefined,
+  };
+}
+
+export async function requestAuthCode(input: RequestCodeInput): Promise<RequestCodeResponse> {
+  return api("/auth/request-code", {
     method: "POST",
     body: JSON.stringify(input),
   });
 }
 
-export async function verifyAuthCode(
-  phone: string,
-  code: string,
-): Promise<VerifyCodeResult & { token?: string }> {
-  return requestJson("/auth/verify-code", {
+export async function verifyAuthCode(phone: string, code: string): Promise<VerifyCodeResult> {
+  return api<VerifyCodeResult>("/auth/verify-code", {
     method: "POST",
     body: JSON.stringify({ phone, code }),
   });
 }
 
 export async function completeProfile(name: string): Promise<{ customer: Customer }> {
-  return requestJson("/auth/complete-profile", {
+  return api("/auth/complete-profile", {
     method: "POST",
     body: JSON.stringify({ name }),
   });
 }
 
 export async function logout(): Promise<void> {
-  await requestJson("/auth/logout", { method: "POST" });
+  await api("/auth/logout", { method: "POST" });
 }
 
 export async function getCustomer(): Promise<Customer> {
-  return requestJson("/customer/me");
+  return api("/customer/me");
 }
 
 export async function listAddresses(): Promise<CustomerAddress[]> {
-  return requestJson("/customer/addresses");
+  const addresses = await api<CustomerAddress[]>("/customer/addresses");
+  return Array.isArray(addresses) ? addresses.map(normalizeCustomerAddress) : [];
 }
 
 export async function createAddress(input: AddressInput): Promise<CustomerAddress> {
-  return requestJson("/customer/addresses", {
+  const created = await api<CustomerAddress>("/customer/addresses", {
     method: "POST",
-    body: JSON.stringify(input),
+    body: JSON.stringify(serializeAddressInput(input)),
   });
+  return normalizeCustomerAddress(created);
 }
 
 export async function updateAddress(
   id: string,
   input: Partial<AddressInput>,
 ): Promise<CustomerAddress> {
-  return requestJson(`/customer/addresses/${encodeURIComponent(id)}`, {
+  const payload: Partial<AddressInput> = { ...input };
+  if (input.phone !== undefined) {
+    const phone = toApiPhone(input.phone);
+    if (!phone) {
+      throw new ApiError("Enter a valid phone number.", 400);
+    }
+    payload.phone = phone;
+  }
+  if (input.mapsUrl !== undefined) {
+    const mapsUrl = input.mapsUrl.trim();
+    payload.mapsUrl = mapsUrl || undefined;
+  }
+  if (input.label !== undefined) {
+    payload.label = input.label.trim() || "Saved address";
+  }
+
+  const updated = await api<CustomerAddress>(`/customer/addresses/${encodeURIComponent(id)}`, {
     method: "PATCH",
-    body: JSON.stringify(input),
+    body: JSON.stringify(payload),
   });
+  return normalizeCustomerAddress(updated);
 }
 
 export async function deleteAddress(id: string): Promise<void> {
-  await requestJson(`/customer/addresses/${encodeURIComponent(id)}`, {
+  await api(`/customer/addresses/${encodeURIComponent(id)}`, {
     method: "DELETE",
   });
 }

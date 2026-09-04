@@ -30,5 +30,12 @@ export type CreateOrderInput = {
 };
 
 export type CreateOrderResult =
-  | { ok: true; reference: string; orderId: string; trackingNumber: string }
+  | {
+      ok: true;
+      reference: string;
+      orderId: string;
+      trackingNumber: string;
+      paymentStatus?: "pending" | "paid" | "demo";
+      paymentMessage?: string;
+    }
   | { ok: false; message: string };

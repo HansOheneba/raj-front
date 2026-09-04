@@ -11,6 +11,12 @@ import {
   type ReactNode,
 } from "react";
 import { useCustomer } from "@/components/customer/CustomerProvider";
+import { isApiEnabled } from "@/lib/api";
+import {
+  addSavedItem,
+  listSavedItems,
+  removeSavedItem,
+} from "@/lib/saved/http";
 import { readSaved, writeSaved } from "@/lib/saved/storage";
 import { savedItemKey, type SavedItem } from "@/lib/saved/types";
 
@@ -54,20 +60,55 @@ export function SavedProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const stored = readSaved(customerId);
-    const pending = pendingSave.current;
-    pendingSave.current = null;
+    let cancelled = false;
 
-    if (!pending) {
-      setItems(stored);
-      setReady(true);
-      return;
-    }
+    const load = async () => {
+      const pending = pendingSave.current;
+      pendingSave.current = null;
 
-    const next = upsert(stored, pending);
-    writeSaved(customerId, next);
-    setItems(next);
-    setReady(true);
+      if (isApiEnabled) {
+        try {
+          let stored = await listSavedItems();
+          if (pending) {
+            const saved = await addSavedItem(stamp(pending));
+            stored = upsert(stored, saved);
+          }
+          if (!cancelled) {
+            setItems(stored);
+            setReady(true);
+          }
+          return;
+        } catch {
+          if (!cancelled) {
+            setItems([]);
+            setReady(true);
+          }
+          return;
+        }
+      }
+
+      const stored = readSaved(customerId);
+      if (!pending) {
+        if (!cancelled) {
+          setItems(stored);
+          setReady(true);
+        }
+        return;
+      }
+
+      const next = upsert(stored, pending);
+      writeSaved(customerId, next);
+      if (!cancelled) {
+        setItems(next);
+        setReady(true);
+      }
+    };
+
+    void load();
+
+    return () => {
+      cancelled = true;
+    };
   }, [authOpen, customerId, customerReady]);
 
   const isSaved = useCallback(
@@ -85,6 +126,14 @@ export function SavedProvider({ children }: { children: ReactNode }) {
         requestAuth("saved");
         return false;
       }
+
+      if (isApiEnabled) {
+        void addSavedItem(stamp(item)).then((saved) => {
+          setItems((current) => upsert(current, saved));
+        });
+        return true;
+      }
+
       setItems((current) => {
         const next = upsert(current, item);
         writeSaved(customerId, next);
@@ -99,6 +148,16 @@ export function SavedProvider({ children }: { children: ReactNode }) {
     (productId: string, variantId?: string) => {
       if (!customerId) return;
       const key = savedItemKey(productId, variantId);
+
+      if (isApiEnabled) {
+        void removeSavedItem(productId, variantId).then(() => {
+          setItems((current) =>
+            current.filter((item) => savedItemKey(item.productId, item.variantId) !== key),
+          );
+        });
+        return;
+      }
+
       setItems((current) => {
         const next = current.filter((item) => savedItemKey(item.productId, item.variantId) !== key);
         writeSaved(customerId, next);
@@ -115,7 +174,26 @@ export function SavedProvider({ children }: { children: ReactNode }) {
         requestAuth("saved");
         return false;
       }
+
       const key = savedItemKey(item.productId, item.variantId);
+
+      if (isApiEnabled) {
+        setItems((current) => {
+          const exists = current.some(
+            (entry) => savedItemKey(entry.productId, entry.variantId) === key,
+          );
+          if (exists) {
+            void removeSavedItem(item.productId, item.variantId);
+            return current.filter(
+              (entry) => savedItemKey(entry.productId, entry.variantId) !== key,
+            );
+          }
+          void addSavedItem(stamp(item));
+          return upsert(current, item);
+        });
+        return true;
+      }
+
       setItems((current) => {
         const exists = current.some((entry) => savedItemKey(entry.productId, entry.variantId) === key);
         const next = exists

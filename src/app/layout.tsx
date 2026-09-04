@@ -9,6 +9,7 @@ import { Footer } from "@/components/layout/Footer";
 import { StoreShell } from "@/components/layout/mobile-nav";
 import { Navbar } from "@/components/layout/Navbar";
 import { SavedProvider } from "@/components/saved/SavedProvider";
+import { Toaster } from "@/components/ui/sonner";
 import { getMegaMenu, listDepartments } from "@/lib/catalog";
 import { siteConfig } from "@/lib/config";
 
@@ -70,6 +71,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 {children}
               </StoreShell>
               <AuthDialog />
+              <Toaster position="top-center" closeButton />
             </CartProvider>
           </SavedProvider>
         </CustomerProvider>

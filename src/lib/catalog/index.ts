@@ -1,9 +1,10 @@
+import { isApiEnabled } from "@/lib/api";
 import { httpCatalog } from "./http";
 import { mockCatalog } from "./mock";
 import { buildMegaMenu, buildPromoMegaMenu, type MegaMenuItem } from "./tree";
 import type { CatalogClient } from "./types";
 
-const catalog: CatalogClient = process.env.NEXT_PUBLIC_API_URL ? httpCatalog : mockCatalog;
+const catalog: CatalogClient = isApiEnabled ? httpCatalog : mockCatalog;
 
 export type MegaMenuData = {
   departments: MegaMenuItem[];

@@ -1,0 +1,3539 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "contractVersion": "1.1.0",
+  "generatedAt": "2026-08-29",
+  "project": "Raj Kollections Portal (admin + storefront API)",
+  "description": "Machine-readable contract for the full-stack portal that powers inventory, order management, and the public storefront API. The portal is one app: staff use the UI; the customer storefront calls the same origin's API routes.",
+  "architecture": {
+    "model": "full-stack-monolith",
+    "summary": "One deployed app (portal) serves both the admin dashboard and the HTTP API the storefront consumes. Not a separate api.* subdomain unless you add one later as a reverse-proxy alias.",
+    "portal": {
+      "purpose": "Inventory, product/department CRUD, order management, fulfilment, payments (Hubtel), customer lookup",
+      "suggestedHost": "https://portal.rajkollections.com",
+      "suggestedRoutes": {
+        "adminUi": "/",
+        "api": "/catalog/*, /orders/*, /auth/*, /customer/* (same host, no /api prefix required)"
+      }
+    },
+    "storefront": {
+      "repo": "raj-front (this repo)",
+      "suggestedHost": "https://www.rajkollections.com",
+      "envVar": "NEXT_PUBLIC_API_URL",
+      "pointsTo": "https://portal.rajkollections.com",
+      "note": "Storefront only needs the portal origin. It does not care whether paths are /api/catalog or /catalog as long as paths in this contract match."
+    },
+    "cors": "Portal must allow browser requests from www.rajkollections.com for client-side search and auth.",
+    "authSplit": {
+      "staff": "Portal admin login (email/password or SSO) — separate from customer phone OTP",
+      "customers": "Phone OTP via /auth/* — used by storefront checkout and account"
+    }
+  },
+  "baseUrl": {
+    "envVar": "NEXT_PUBLIC_API_URL",
+    "example": "https://portal.rajkollections.com",
+    "alternatives": [
+      "https://portal.rajkollections.com",
+      "https://manage.rajkollections.com"
+    ],
+    "note": "Set on the storefront to the portal origin (no trailing slash). API routes live on the same host as the admin app."
+  },
+  "currency": "GHS",
+  "locale": "en-GH",
+  "terminology": {
+    "department": "A browse category. Two-level tree: top-level departments (Pantry, Beauty, etc.) and sub-departments (Rice & grains, Body mists, etc.). Products are assigned to a department via departmentId — usually a leaf sub-department.",
+    "collection": "NOT USED in the storefront. Do not build a separate collections model unless you want admin-only merchandising later. Navigation and /shop/[category] use departments only.",
+    "product": "A sellable item. May be simple (single SKU) or have variants (size, weight, colour, etc.).",
+    "variant": "A purchasable SKU under a product. Has its own id, sku, price, stock, and attribute map (e.g. { Size: \"M\" }).",
+    "tags": "String labels on products. Storefront uses \"sale\" (compareAtPrice > price OR explicit tag) and \"new\" for promo menus. Filter: GET /catalog/products?sale=1",
+    "keywords": "Search synonyms stored on the product. Used by storefront search expansion.",
+    "order": "Immutable snapshot created at checkout. Serves as invoice source of truth. PDF is generated client-side from Order JSON.",
+    "trackingNumber": "Customer-facing reference format RK-##### (e.g. RK-73262). Public lookup at /track/{number}.",
+    "invoice": "No separate invoice entity. invoiceNumber defaults to trackingNumber. paymentReference is the MoMo/Hubtel ref stored on the order."
+  },
+  "businessRules": {
+    "shipping": {
+      "flatRate": 25,
+      "freeThreshold": 350,
+      "currency": "GHS",
+      "note": "Storefront computes shipping client-side. API MUST re-validate on POST /orders."
+    },
+    "payment": {
+      "handledBy": "admin-backend",
+      "note": "Storefront never calls Hubtel. POST /orders creates order and triggers payment server-side."
+    },
+    "auth": {
+      "method": "phone-otp",
+      "phoneFormat": "233XXXXXXXXX (Ghana, no leading + in storage)",
+      "session": "HttpOnly cookie preferred; Bearer token requires storefront wiring"
+    },
+    "catalog": {
+      "cacheSeconds": 60,
+      "note": "Catalog GET endpoints are fetched with next.revalidate 60 on server components."
+    },
+    "images": {
+      "note": "imageUrls are site-relative paths (e.g. /images/products/...). Host serves static files or CDN."
+    }
+  },
+  "catalogGuide": {
+    "hierarchy": "Two levels maximum in seed data. parentId null = top nav department. Products link to departmentId.",
+    "routing": {
+      "allProducts": "/shop",
+      "departmentListing": "/shop/{departmentSlug}",
+      "productDetail": "/product/{productSlug}"
+    },
+    "promoMenus": {
+      "onSale": "Products where compareAtPrice > price OR tags includes \"sale\". Query: ?sale=1",
+      "newArrivals": "Products sorted by createdAt desc. Query: ?sort=newest",
+      "note": "Promo mega-menu items are computed in storefront, not stored entities."
+    },
+    "variantPatterns": [
+      {
+        "pattern": "Weight variants",
+        "example": "Golden Basmati Rice — 1kg, 5kg, 10kg",
+        "attributeKey": "Weight"
+      },
+      {
+        "pattern": "Volume variants",
+        "example": "Extra Virgin Olive Oil — 250ml, 500ml, 1L",
+        "attributeKey": "Volume"
+      },
+      {
+        "pattern": "Size variants (apparel)",
+        "example": "Ivory Linen Wrap Dress — S, M, L",
+        "attributeKey": "Size"
+      },
+      {
+        "pattern": "Colour variants",
+        "example": "Structured Shoulder Bag — Black, Tan",
+        "attributeKey": "Color"
+      },
+      {
+        "pattern": "Colour + Size",
+        "example": "Canvas Court Sneakers — White/Navy × 40-42",
+        "attributeKeys": [
+          "Color",
+          "Size"
+        ]
+      },
+      {
+        "pattern": "Single SKU",
+        "example": "Brown Long Grain Rice — fixed 5kg in product.attributes",
+        "note": "No variants array"
+      }
+    ],
+    "productTypesInSeed": {
+      "withVariants": 10,
+      "singleSku": 18,
+      "onSale": 3,
+      "taggedNew": 4,
+      "outOfStock": 1,
+      "total": 28
+    },
+    "attributeKeysUsed": [
+      "Color",
+      "Fabric",
+      "Length",
+      "Material",
+      "Origin",
+      "Pack",
+      "Set",
+      "Size",
+      "Style",
+      "Volume",
+      "Weight"
+    ]
+  },
+  "schemas": {
+    "Department": {
+      "type": "object",
+      "required": [
+        "id",
+        "slug",
+        "name",
+        "parentId",
+        "sortOrder",
+        "image",
+        "description"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "example": "dep-pantry-rice"
+        },
+        "slug": {
+          "type": "string",
+          "example": "rice-grains"
+        },
+        "name": {
+          "type": "string",
+          "example": "Rice & grains"
+        },
+        "parentId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "example": "dep-pantry"
+        },
+        "sortOrder": {
+          "type": "integer",
+          "example": 11
+        },
+        "image": {
+          "type": "string",
+          "example": "/images/products/golden-basmati-rice-1.jpg"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+    "ProductVariant": {
+      "type": "object",
+      "required": [
+        "id",
+        "sku",
+        "attributes",
+        "price",
+        "stock"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "example": "v-001-5"
+        },
+        "sku": {
+          "type": "string",
+          "example": "RICE-BAS-5"
+        },
+        "attributes": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "example": {
+            "Weight": "5kg"
+          }
+        },
+        "price": {
+          "type": "number",
+          "description": "GHS, integer in practice"
+        },
+        "stock": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "imageUrls": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Optional per-variant images"
+        }
+      }
+    },
+    "Product": {
+      "type": "object",
+      "required": [
+        "id",
+        "slug",
+        "name",
+        "departmentId",
+        "description",
+        "imageUrls",
+        "price",
+        "inStock",
+        "createdAt",
+        "attributes"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "slug": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "departmentId": {
+          "type": "string"
+        },
+        "brand": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "imageUrls": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "price": {
+          "type": "number",
+          "description": "Display/sort price. If variants exist, often highest variant price."
+        },
+        "compareAtPrice": {
+          "type": "number",
+          "description": "Original price for sale badge"
+        },
+        "inStock": {
+          "type": "boolean",
+          "description": "Product-level flag. Variant stock also checked at checkout."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date",
+          "example": "2026-05-12"
+        },
+        "popularity": {
+          "type": "integer",
+          "description": "Higher = more featured in menus"
+        },
+        "attributes": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Fixed specs when no variants, or shared specs"
+        },
+        "variants": {
+          "type": "array",
+          "items": {
+            "$ref": "#/schemas/ProductVariant"
+          }
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "sale",
+              "new"
+            ]
+          }
+        },
+        "keywords": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProductListResult": {
+      "type": "object",
+      "required": [
+        "items",
+        "total",
+        "bounds"
+      ],
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/schemas/Product"
+          }
+        },
+        "total": {
+          "type": "integer"
+        },
+        "bounds": {
+          "type": "object",
+          "properties": {
+            "min": {
+              "type": "number"
+            },
+            "max": {
+              "type": "number"
+            }
+          }
+        }
+      }
+    },
+    "Order": {
+      "type": "object",
+      "required": [
+        "id",
+        "placedAt",
+        "status",
+        "deliveryDate",
+        "address",
+        "shipping",
+        "subtotal",
+        "total",
+        "lines"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "example": "73262"
+        },
+        "trackingNumber": {
+          "type": "string",
+          "example": "RK-73262"
+        },
+        "invoiceNumber": {
+          "type": "string",
+          "description": "Defaults to trackingNumber if omitted"
+        },
+        "paymentReference": {
+          "type": "string",
+          "description": "Hubtel/MoMo reference for support lookup"
+        },
+        "placedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "status": {
+          "enum": [
+            "processing",
+            "packed",
+            "on_the_way",
+            "delivered",
+            "cancelled"
+          ]
+        },
+        "deliveryDate": {
+          "type": "string"
+        },
+        "address": {
+          "type": "object",
+          "required": [
+            "name",
+            "line",
+            "region"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "line": {
+              "type": "string"
+            },
+            "city": {
+              "type": "string"
+            },
+            "region": {
+              "type": "string"
+            }
+          }
+        },
+        "rider": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            }
+          }
+        },
+        "shipping": {
+          "type": "number"
+        },
+        "subtotal": {
+          "type": "number"
+        },
+        "total": {
+          "type": "number"
+        },
+        "lines": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "productId",
+              "slug",
+              "name",
+              "imageUrl",
+              "quantity",
+              "unitPrice",
+              "attributes"
+            ],
+            "properties": {
+              "productId": {
+                "type": "string"
+              },
+              "slug": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "imageUrl": {
+                "type": "string"
+              },
+              "quantity": {
+                "type": "integer"
+              },
+              "unitPrice": {
+                "type": "number",
+                "description": "Frozen price at purchase"
+              },
+              "attributes": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "CreateOrderInput": {
+      "type": "object",
+      "required": [
+        "customer",
+        "lines",
+        "subtotal",
+        "shipping",
+        "total"
+      ],
+      "properties": {
+        "customerId": {
+          "type": "string"
+        },
+        "customer": {
+          "type": "object",
+          "required": [
+            "name",
+            "phone",
+            "email",
+            "region",
+            "city",
+            "address"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "phone": {
+              "type": "string"
+            },
+            "email": {
+              "type": "string"
+            },
+            "region": {
+              "type": "string"
+            },
+            "city": {
+              "type": "string"
+            },
+            "address": {
+              "type": "string"
+            },
+            "mapsUrl": {
+              "type": "string"
+            },
+            "notes": {
+              "type": "string"
+            }
+          }
+        },
+        "lines": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "productId",
+              "slug",
+              "quantity",
+              "name",
+              "price",
+              "imageUrl"
+            ],
+            "properties": {
+              "productId": {
+                "type": "string"
+              },
+              "variantId": {
+                "type": "string"
+              },
+              "slug": {
+                "type": "string"
+              },
+              "quantity": {
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              },
+              "price": {
+                "type": "number"
+              },
+              "imageUrl": {
+                "type": "string"
+              },
+              "attributes": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "subtotal": {
+          "type": "number"
+        },
+        "shipping": {
+          "type": "number"
+        },
+        "total": {
+          "type": "number"
+        }
+      }
+    },
+    "Customer": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "phone"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "phone": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        }
+      }
+    },
+    "CustomerAddress": {
+      "type": "object",
+      "required": [
+        "id",
+        "label",
+        "name",
+        "phone",
+        "region",
+        "city",
+        "line",
+        "isDefault"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "phone": {
+          "type": "string"
+        },
+        "region": {
+          "type": "string"
+        },
+        "city": {
+          "type": "string"
+        },
+        "line": {
+          "type": "string"
+        },
+        "mapsUrl": {
+          "type": "string"
+        },
+        "isDefault": {
+          "type": "boolean"
+        }
+      }
+    },
+    "SavedItem": {
+      "type": "object",
+      "required": [
+        "productId",
+        "snapshot",
+        "savedAt"
+      ],
+      "properties": {
+        "productId": {
+          "type": "string"
+        },
+        "variantId": {
+          "type": "string"
+        },
+        "snapshot": {
+          "type": "object",
+          "required": [
+            "slug",
+            "name",
+            "price",
+            "imageUrl"
+          ],
+          "properties": {
+            "slug": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "price": {
+              "type": "number"
+            },
+            "compareAtPrice": {
+              "type": "number"
+            },
+            "imageUrl": {
+              "type": "string"
+            },
+            "optionLabel": {
+              "type": "string"
+            }
+          }
+        },
+        "savedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  },
+  "sortKeys": [
+    "featured",
+    "newest",
+    "price-asc",
+    "price-desc",
+    "popularity"
+  ],
+  "endpoints": [
+    {
+      "phase": 1,
+      "method": "GET",
+      "path": "/catalog/departments",
+      "auth": false,
+      "response": "Department[]"
+    },
+    {
+      "phase": 1,
+      "method": "GET",
+      "path": "/catalog/departments/:slug",
+      "auth": false,
+      "response": "Department"
+    },
+    {
+      "phase": 1,
+      "method": "GET",
+      "path": "/catalog/products",
+      "auth": false,
+      "query": {
+        "department": "department slug",
+        "q": "search term",
+        "min": "min price number",
+        "max": "max price number",
+        "stock": "1 for in-stock only",
+        "sale": "1 for on-sale only",
+        "sort": "SortKey"
+      },
+      "response": "ProductListResult",
+      "storefrontBehavior": {
+        "noParams": "Return ALL products + bounds (required for mega menu)",
+        "department": "Include products in department slug AND all child sub-departments",
+        "sale": "1 = compareAtPrice > price",
+        "stock": "1 = inStock true",
+        "sort": "featured | newest | popularity | price-asc | price-desc",
+        "q": "Search with ranking (in-stock boost, popularity boost)"
+      },
+      "responseMustInclude": "Every field in schemas.Product — especially compareAtPrice, tags, keywords, popularity, variants"
+    },
+    {
+      "phase": 1,
+      "method": "GET",
+      "path": "/catalog/products/:slug",
+      "auth": false,
+      "response": "Product"
+    },
+    {
+      "phase": 1,
+      "method": "GET",
+      "path": "/catalog/products/id/:id",
+      "auth": false,
+      "response": "Product"
+    },
+    {
+      "phase": 1,
+      "method": "GET",
+      "path": "/catalog/products/:slug/related",
+      "auth": false,
+      "query": {
+        "limit": "default 4"
+      },
+      "response": "Product[]"
+    },
+    {
+      "phase": 1,
+      "method": "GET",
+      "path": "/catalog/search",
+      "auth": false,
+      "query": {
+        "q": "required",
+        "limit": "default 6"
+      },
+      "response": "Product[]",
+      "note": "CORS required for client-side search"
+    },
+    {
+      "phase": 1,
+      "method": "POST",
+      "path": "/orders",
+      "auth": "optional",
+      "body": "CreateOrderInput",
+      "response": "{ reference, orderId, trackingNumber, paymentReference? }"
+    },
+    {
+      "phase": 1,
+      "method": "GET",
+      "path": "/orders",
+      "auth": "session",
+      "response": "Order[]",
+      "note": "Session-scoped; customerId not sent from client"
+    },
+    {
+      "phase": 1,
+      "method": "GET",
+      "path": "/orders/:id",
+      "auth": "session",
+      "response": "Order"
+    },
+    {
+      "phase": 1,
+      "method": "GET",
+      "path": "/orders/track/:trackingNumber",
+      "auth": false,
+      "response": "Order",
+      "note": "Public tracking lookup"
+    },
+    {
+      "phase": 2,
+      "method": "POST",
+      "path": "/auth/request-code",
+      "auth": false,
+      "body": "{ phone, profile?: { name } }",
+      "response": "{ ok: boolean }"
+    },
+    {
+      "phase": 2,
+      "method": "POST",
+      "path": "/auth/verify-code",
+      "auth": false,
+      "body": "{ phone, code }",
+      "response": "{ ok, needsProfile?, token? } + session cookie"
+    },
+    {
+      "phase": 2,
+      "method": "POST",
+      "path": "/auth/complete-profile",
+      "auth": "session",
+      "body": "{ name }",
+      "response": "{ customer: Customer }"
+    },
+    {
+      "phase": 2,
+      "method": "POST",
+      "path": "/auth/logout",
+      "auth": "session",
+      "response": "204"
+    },
+    {
+      "phase": 2,
+      "method": "GET",
+      "path": "/customer/me",
+      "auth": "session",
+      "response": "Customer"
+    },
+    {
+      "phase": 2,
+      "method": "GET",
+      "path": "/customer/addresses",
+      "auth": "session",
+      "response": "CustomerAddress[]"
+    },
+    {
+      "phase": 2,
+      "method": "POST",
+      "path": "/customer/addresses",
+      "auth": "session",
+      "body": "AddressInput",
+      "response": "CustomerAddress"
+    },
+    {
+      "phase": 2,
+      "method": "PATCH",
+      "path": "/customer/addresses/:id",
+      "auth": "session",
+      "body": "Partial<AddressInput>",
+      "response": "CustomerAddress"
+    },
+    {
+      "phase": 2,
+      "method": "DELETE",
+      "path": "/customer/addresses/:id",
+      "auth": "session",
+      "response": "204"
+    },
+    {
+      "phase": 2,
+      "method": "GET",
+      "path": "/customer/saved",
+      "auth": "session",
+      "response": "SavedItem[]"
+    },
+    {
+      "phase": 2,
+      "method": "PUT",
+      "path": "/customer/saved",
+      "auth": "session",
+      "body": "SavedItem[]",
+      "response": "SavedItem[]"
+    },
+    {
+      "phase": 2,
+      "method": "POST",
+      "path": "/customer/saved",
+      "auth": "session",
+      "body": "SavedItem",
+      "response": "SavedItem"
+    },
+    {
+      "phase": 2,
+      "method": "DELETE",
+      "path": "/customer/saved/:productId",
+      "auth": "session",
+      "query": {
+        "variantId": "recommended addition"
+      },
+      "response": "204"
+    }
+  ],
+  "departmentTree": [
+    {
+      "id": "dep-pantry",
+      "slug": "pantry",
+      "name": "Pantry",
+      "parentId": null,
+      "sortOrder": 1,
+      "image": "/images/products/golden-basmati-rice-1.jpg",
+      "description": "Rice, oils, snacks and everyday cooking goods.",
+      "children": [
+        {
+          "id": "dep-pantry-rice",
+          "slug": "rice-grains",
+          "name": "Rice & grains",
+          "parentId": "dep-pantry",
+          "sortOrder": 11,
+          "image": "/images/products/golden-basmati-rice-1.jpg",
+          "description": "Basmati, jasmine and everyday rice.",
+          "productCount": 3
+        },
+        {
+          "id": "dep-pantry-oils",
+          "slug": "oils",
+          "name": "Oils",
+          "parentId": "dep-pantry",
+          "sortOrder": 12,
+          "image": "/images/products/extra-virgin-olive-oil-1.jpg",
+          "description": "Cooking and finishing oils.",
+          "productCount": 3
+        },
+        {
+          "id": "dep-pantry-dairy",
+          "slug": "dairy",
+          "name": "Dairy",
+          "parentId": "dep-pantry",
+          "sortOrder": 13,
+          "image": "/images/products/greek-style-yoghurt-1.jpg",
+          "description": "Yoghurt, milk powder and tinned milk.",
+          "productCount": 3
+        }
+      ],
+      "productCount": 9
+    },
+    {
+      "id": "dep-beauty",
+      "slug": "beauty",
+      "name": "Beauty",
+      "parentId": null,
+      "sortOrder": 2,
+      "image": "/images/products/velvet-musk-body-mist-1.jpg",
+      "description": "Body lotions, care sets and dressing-table essentials.",
+      "children": [
+        {
+          "id": "dep-beauty-body",
+          "slug": "body-mists",
+          "name": "Body mists",
+          "parentId": "dep-beauty",
+          "sortOrder": 21,
+          "image": "/images/products/velvet-musk-body-mist-1.jpg",
+          "description": "Light body sprays for after lotion.",
+          "productCount": 1
+        },
+        {
+          "id": "dep-beauty-scent",
+          "slug": "attar-edt",
+          "name": "Attar & EDT",
+          "parentId": "dep-beauty",
+          "sortOrder": 22,
+          "image": "/images/products/saffron-cedar-attar-oil-1.jpg",
+          "description": "Perfume oils and eau de toilette.",
+          "productCount": 2
+        }
+      ],
+      "productCount": 3
+    },
+    {
+      "id": "dep-fashion",
+      "slug": "fashion",
+      "name": "Fashion",
+      "parentId": null,
+      "sortOrder": 3,
+      "image": "/images/products/ivory-linen-wrap-dress-1.jpg",
+      "description": "Bags, dresses and accessories.",
+      "children": [
+        {
+          "id": "dep-fashion-dresses",
+          "slug": "dresses",
+          "name": "Dresses",
+          "parentId": "dep-fashion",
+          "sortOrder": 31,
+          "image": "/images/products/ivory-linen-wrap-dress-1.jpg",
+          "description": "Day dresses, wraps and occasion pieces.",
+          "productCount": 5
+        },
+        {
+          "id": "dep-fashion-bags",
+          "slug": "bags",
+          "name": "Bags",
+          "parentId": "dep-fashion",
+          "sortOrder": 32,
+          "image": "/images/products/structured-shoulder-bag-1.jpg",
+          "description": "Shoulder bags and everyday carry.",
+          "productCount": 1
+        }
+      ],
+      "productCount": 6
+    },
+    {
+      "id": "dep-footwear",
+      "slug": "footwear",
+      "name": "Footwear",
+      "parentId": null,
+      "sortOrder": 4,
+      "image": "/images/products/canvas-court-sneakers-1.jpg",
+      "description": "Slides, sneakers and branded footwear.",
+      "children": [
+        {
+          "id": "dep-footwear-sneakers",
+          "slug": "sneakers",
+          "name": "Sneakers",
+          "parentId": "dep-footwear",
+          "sortOrder": 41,
+          "image": "/images/products/canvas-court-sneakers-1.jpg",
+          "description": "Court and canvas sneakers.",
+          "productCount": 1
+        },
+        {
+          "id": "dep-footwear-slides",
+          "slug": "slides",
+          "name": "Slides",
+          "parentId": "dep-footwear",
+          "sortOrder": 42,
+          "image": "/images/products/pool-slides-1.jpg",
+          "description": "Pool slides and moulded sandals.",
+          "productCount": 1
+        },
+        {
+          "id": "dep-footwear-loafers",
+          "slug": "loafers",
+          "name": "Loafers",
+          "parentId": "dep-footwear",
+          "sortOrder": 43,
+          "image": "/images/products/leather-loafer-1.jpg",
+          "description": "Penny loafers and leather flats.",
+          "productCount": 1
+        }
+      ],
+      "productCount": 3
+    },
+    {
+      "id": "dep-fragrance",
+      "slug": "fragrance",
+      "name": "Fragrance",
+      "parentId": null,
+      "sortOrder": 5,
+      "image": "/images/products/amber-oud-eau-de-parfum-1.jpg",
+      "description": "Men and women fragrances in boxed retail sizes.",
+      "children": [],
+      "productCount": 2
+    },
+    {
+      "id": "dep-household",
+      "slug": "household",
+      "name": "Household",
+      "parentId": null,
+      "sortOrder": 6,
+      "image": "/images/products/woven-storage-basket-1.jpg",
+      "description": "Home pieces and cleaning essentials for everyday use.",
+      "children": [
+        {
+          "id": "dep-household-kitchen",
+          "slug": "kitchen",
+          "name": "Kitchen",
+          "parentId": "dep-household",
+          "sortOrder": 61,
+          "image": "/images/products/ceramic-serving-bowl-set-1.jpg",
+          "description": "Bowls, utensils and tea towels.",
+          "productCount": 3
+        },
+        {
+          "id": "dep-household-home",
+          "slug": "home-care",
+          "name": "Home care",
+          "parentId": "dep-household",
+          "sortOrder": 62,
+          "image": "/images/products/lavender-laundry-soap-bar-1.jpg",
+          "description": "Storage, laundry and everyday home goods.",
+          "productCount": 2
+        }
+      ],
+      "productCount": 5
+    }
+  ],
+  "productIndex": [
+    {
+      "id": "p-001",
+      "slug": "golden-basmati-rice",
+      "name": "Golden Basmati Rice",
+      "departmentId": "dep-pantry-rice",
+      "departmentPath": "Pantry > Rice & grains",
+      "brand": "Raj pantry",
+      "price": 189,
+      "priceRange": {
+        "min": 45,
+        "max": 349
+      },
+      "compareAtPrice": 215,
+      "inStock": true,
+      "hasVariants": true,
+      "variantCount": 3,
+      "variantAxes": [
+        {
+          "name": "Weight",
+          "values": [
+            "1kg",
+            "5kg",
+            "10kg"
+          ]
+        }
+      ],
+      "productAttributes": {
+        "Origin": "UK packed"
+      },
+      "tags": [
+        "sale"
+      ],
+      "keywords": [
+        "rice",
+        "basmati",
+        "long grain",
+        "white rice",
+        "staple",
+        "pantry"
+      ],
+      "imageCount": 3
+    },
+    {
+      "id": "p-002",
+      "slug": "jasmine-fragrant-rice",
+      "name": "Jasmine Fragrant Rice",
+      "departmentId": "dep-pantry-rice",
+      "departmentPath": "Pantry > Rice & grains",
+      "brand": "Raj pantry",
+      "price": 165,
+      "priceRange": {
+        "min": 42,
+        "max": 165
+      },
+      "compareAtPrice": null,
+      "inStock": true,
+      "hasVariants": true,
+      "variantCount": 2,
+      "variantAxes": [
+        {
+          "name": "Weight",
+          "values": [
+            "1kg",
+            "5kg"
+          ]
+        }
+      ],
+      "productAttributes": {
+        "Origin": "UK packed"
+      },
+      "tags": [],
+      "keywords": [
+        "rice",
+        "jasmine",
+        "fragrant rice",
+        "thai rice",
+        "staple",
+        "pantry"
+      ],
+      "imageCount": 3
+    },
+    {
+      "id": "p-003",
+      "slug": "brown-long-grain-rice",
+      "name": "Brown Long Grain Rice",
+      "departmentId": "dep-pantry-rice",
+      "departmentPath": "Pantry > Rice & grains",
+      "brand": null,
+      "price": 155,
+      "priceRange": {
+        "min": 155,
+        "max": 155
+      },
+      "compareAtPrice": null,
+      "inStock": true,
+      "hasVariants": false,
+      "variantCount": 0,
+      "variantAxes": [],
+      "productAttributes": {
+        "Weight": "5kg"
+      },
+      "tags": [],
+      "keywords": [
+        "rice",
+        "brown rice",
+        "wholegrain",
+        "whole grain",
+        "staple",
+        "pantry"
+      ],
+      "imageCount": 3
+    },
+    {
+      "id": "p-004",
+      "slug": "extra-virgin-olive-oil",
+      "name": "Extra Virgin Olive Oil",
+      "departmentId": "dep-pantry-oils",
+      "departmentPath": "Pantry > Oils",
+      "brand": null,
+      "price": 95,
+      "priceRange": {
+        "min": 55,
+        "max": 165
+      },
+      "compareAtPrice": null,
+      "inStock": true,
+      "hasVariants": true,
+      "variantCount": 3,
+      "variantAxes": [
+        {
+          "name": "Volume",
+          "values": [
+            "250ml",
+            "500ml",
+            "1L"
+          ]
+        }
+      ],
+      "productAttributes": {
+        "Origin": "Mediterranean"
+      },
+      "tags": [],
+      "keywords": [
+        "olive oil",
+        "extra virgin",
+        "cooking oil",
+        "salad oil",
+        "evoo"
+      ],
+      "imageCount": 3
+    },
+    {
+      "id": "p-005",
+      "slug": "coconut-cooking-oil",
+      "name": "Coconut Cooking Oil",
+      "departmentId": "dep-pantry-oils",
+      "departmentPath": "Pantry > Oils",
+      "brand": null,
+      "price": 62,
+      "priceRange": {
+        "min": 62,
+        "max": 62
+      },
+      "compareAtPrice": null,
+      "inStock": true,
+      "hasVariants": false,
+      "variantCount": 0,
+      "variantAxes": [],
+      "productAttributes": {
+        "Volume": "500ml"
+      },
+      "tags": [],
+      "keywords": [
+        "coconut oil",
+        "cooking oil",
+        "frying oil"
+      ],
+      "imageCount": 3
+    },
+    {
+      "id": "p-006",
+      "slug": "cold-pressed-groundnut-oil",
+      "name": "Cold Pressed Groundnut Oil",
+      "departmentId": "dep-pantry-oils",
+      "departmentPath": "Pantry > Oils",
+      "brand": null,
+      "price": 58,
+      "priceRange": {
+        "min": 58,
+        "max": 58
+      },
+      "compareAtPrice": null,
+      "inStock": true,
+      "hasVariants": false,
+      "variantCount": 0,
+      "variantAxes": [],
+      "productAttributes": {
+        "Volume": "500ml"
+      },
+      "tags": [],
+      "keywords": [
+        "groundnut oil",
+        "peanut oil",
+        "cooking oil"
+      ],
+      "imageCount": 3
+    },
+    {
+      "id": "p-007",
+      "slug": "greek-style-yoghurt",
+      "name": "Greek Style Yoghurt",
+      "departmentId": "dep-pantry-dairy",
+      "departmentPath": "Pantry > Dairy",
+      "brand": null,
+      "price": 28,
+      "priceRange": {
+        "min": 28,
+        "max": 28
+      },
+      "compareAtPrice": null,
+      "inStock": true,
+      "hasVariants": false,
+      "variantCount": 0,
+      "variantAxes": [],
+      "productAttributes": {
+        "Pack": "500g"
+      },
+      "tags": [
+        "new"
+      ],
+      "keywords": [
+        "yogurt",
+        "yoghurt",
+        "greek yogurt",
+        "dairy"
+      ],
+      "imageCount": 3
+    },
+    {
+      "id": "p-008",
+      "slug": "full-cream-milk-powder",
+      "name": "Full Cream Milk Powder",
+      "departmentId": "dep-pantry-dairy",
+      "departmentPath": "Pantry > Dairy",
+      "brand": null,
+      "price": 85,
+      "priceRange": {
+        "min": 85,
+        "max": 85
+      },
+      "compareAtPrice": null,
+      "inStock": true,
+      "hasVariants": false,
+      "variantCount": 0,
+      "variantAxes": [],
+      "productAttributes": {
+        "Weight": "900g"
+      },
+      "tags": [],
+      "keywords": [
+        "milk powder",
+        "powdered milk",
+        "full cream",
+        "dairy"
+      ],
+      "imageCount": 3
+    },
+    {
+      "id": "p-009",
+      "slug": "evaporated-milk-six-pack",
+      "name": "Evaporated Milk Six Pack",
+      "departmentId": "dep-pantry-dairy",
+      "departmentPath": "Pantry > Dairy",
+      "brand": null,
+      "price": 72,
+      "priceRange": {
+        "min": 72,
+        "max": 72
+      },
+      "compareAtPrice": null,
+      "inStock": true,
+      "hasVariants": false,
+      "variantCount": 0,
+      "variantAxes": [],
+      "productAttributes": {
+        "Pack": "6 x 410g"
+      },
+      "tags": [],
+      "keywords": [
+        "evaporated milk",
+        "tinned milk",
+        "canned milk",
+        "dairy"
+      ],
+      "imageCount": 3
+    },
+    {
+      "id": "p-010",
+      "slug": "velvet-musk-body-mist",
+      "name": "Velvet Musk Body Mist",
+      "departmentId": "dep-beauty-body",
+      "departmentPath": "Beauty > Body mists",
+      "brand": null,
+      "price": 89,
+      "priceRange": {
+        "min": 89,
+        "max": 89
+      },
+      "compareAtPrice": null,
+      "inStock": true,
+      "hasVariants": false,
+      "variantCount": 0,
+      "variantAxes": [],
+      "productAttributes": {
+        "Volume": "200ml"
+      },
+      "tags": [],
+      "keywords": [
+        "body spray",
+        "body mist",
+        "perfume",
+        "fragrance",
+        "musk",
+        "scent"
+      ],
+      "imageCount": 3
+    },
+    {
+      "id": "p-011",
+      "slug": "saffron-cedar-attar-oil",
+      "name": "Saffron Cedar Attar Oil",
+      "departmentId": "dep-beauty-scent",
+      "departmentPath": "Beauty > Attar & EDT",
+      "brand": null,
+      "price": 145,
+      "priceRange": {
+        "min": 145,
+        "max": 145
+      },
+      "compareAtPrice": null,
+      "inStock": true,
+      "hasVariants": false,
+      "variantCount": 0,
+      "variantAxes": [],
+      "productAttributes": {
+        "Volume": "12ml"
+      },
+      "tags": [
+        "new"
+      ],
+      "keywords": [
+        "perfume oil",
+        "attar",
+        "fragrance",
+        "concentrated perfume",
+        "oud",
+        "scent"
+      ],
+      "imageCount": 3
+    },
+    {
+      "id": "p-012",
+      "slug": "rose-nectar-eau-de-toilette",
+      "name": "Rose Nectar Eau de Toilette",
+      "departmentId": "dep-beauty-scent",
+      "departmentPath": "Beauty > Attar & EDT",
+      "brand": null,
+      "price": 210,
+      "priceRange": {
+        "min": 210,
+        "max": 210
+      },
+      "compareAtPrice": null,
+      "inStock": true,
+      "hasVariants": false,
+      "variantCount": 0,
+      "variantAxes": [],
+      "productAttributes": {
+        "Volume": "50ml"
+      },
+      "tags": [],
+      "keywords": [
+        "perfume",
+        "fragrance",
+        "edt",
+        "eau de toilette",
+        "rose perfume",
+        "scent"
+      ],
+      "imageCount": 3
+    },
+    {
+      "id": "p-013",
+      "slug": "ivory-linen-wrap-dress",
+      "name": "Ivory Linen Wrap Dress",
+      "departmentId": "dep-fashion-dresses",
+      "departmentPath": "Fashion > Dresses",
+      "brand": null,
+      "price": 420,
+      "priceRange": {
+        "min": 420,
+        "max": 420
+      },
+      "compareAtPrice": null,
+      "inStock": true,
+      "hasVariants": true,
+      "variantCount": 3,
+      "variantAxes": [
+        {
+          "name": "Size",
+          "values": [
+            "S",
+            "M",
+            "L"
+          ]
+        }
+      ],
+      "productAttributes": {
+        "Fabric": "Linen"
+      },
+      "tags": [],
+      "keywords": [
+        "dress",
+        "wrap dress",
+        "linen dress",
+        "women clothing",
+        "outfit"
+      ],
+      "imageCount": 3
+    },
+    {
+      "id": "p-014",
+      "slug": "cotton-poplin-day-dress",
+      "name": "Cotton Poplin Day Dress",
+      "departmentId": "dep-fashion-dresses",
+      "departmentPath": "Fashion > Dresses",
+      "brand": null,
+      "price": 380,
+      "priceRange": {
+        "min": 380,
+        "max": 380
+      },
+      "compareAtPrice": null,
+      "inStock": true,
+      "hasVariants": true,
+      "variantCount": 3,
+      "variantAxes": [
+        {
+          "name": "Size",
+          "values": [
+            "S",
+            "M",
+            "L"
+          ]
+        }
+      ],
+      "productAttributes": {
+        "Fabric": "Cotton"
+      },
+      "tags": [],
+      "keywords": [
+        "dress",
+        "day dress",
+        "cotton dress",
+        "women clothing",
+        "outfit"
+      ],
+      "imageCount": 3
+    },
+    {
+      "id": "p-015",
+      "slug": "ankara-print-a-line-dress",
+      "name": "Ankara Print A-Line Dress",
+      "departmentId": "dep-fashion-dresses",
+      "departmentPath": "Fashion > Dresses",
+      "brand": null,
+      "price": 455,
+      "priceRange": {
+        "min": 455,
+        "max": 455
+      },
+      "compareAtPrice": null,
+      "inStock": true,
+      "hasVariants": true,
+      "variantCount": 3,
+      "variantAxes": [
+        {
+          "name": "Size",
+          "values": [
+            "S",
+            "M",
+            "L"
+          ]
+        }
+      ],
+      "productAttributes": {
+        "Fabric": "Wax print"
+      },
+      "tags": [
+        "new"
+      ],
+      "keywords": [
+        "dress",
+        "ankara",
+        "print dress",
+        "women clothing",
+        "outfit"
+      ],
+      "imageCount": 3
+    },
+    {
+      "id": "p-016",
+      "slug": "terracotta-midi-shirt-dress",
+      "name": "Terracotta Midi Shirt Dress",
+      "departmentId": "dep-fashion-dresses",
+      "departmentPath": "Fashion > Dresses",
+      "brand": null,
+      "price": 399,
+      "priceRange": {
+        "min": 399,
+        "max": 399
+      },
+      "compareAtPrice": 470,
+      "inStock": true,
+      "hasVariants": false,
+      "variantCount": 0,
+      "variantAxes": [],
+      "productAttributes": {
+        "Length": "Midi"
+      },
+      "tags": [
+        "sale"
+      ],
+      "keywords": [
+        "dress",
+        "shirt dress",
+        "midi dress",
+        "women clothing",
+        "outfit"
+      ],
+      "imageCount": 3
+    },
+    {
+      "id": "p-017",
+      "slug": "pleated-chiffon-maxi-dress",
+      "name": "Pleated Chiffon Maxi Dress",
+      "departmentId": "dep-fashion-dresses",
+      "departmentPath": "Fashion > Dresses",
+      "brand": null,
+      "price": 520,
+      "priceRange": {
+        "min": 520,
+        "max": 520
+      },
+      "compareAtPrice": null,
+      "inStock": true,
+      "hasVariants": false,
+      "variantCount": 0,
+      "variantAxes": [],
+      "productAttributes": {
+        "Length": "Maxi"
+      },
+      "tags": [],
+      "keywords": [
+        "dress",
+        "maxi dress",
+        "chiffon",
+        "women clothing",
+        "outfit"
+      ],
+      "imageCount": 3
+    },
+    {
+      "id": "p-018",
+      "slug": "structured-shoulder-bag",
+      "name": "Structured Shoulder Bag",
+      "departmentId": "dep-fashion-bags",
+      "departmentPath": "Fashion > Bags",
+      "brand": "UK goods",
+      "price": 399,
+      "priceRange": {
+        "min": 399,
+        "max": 399
+      },
+      "compareAtPrice": null,
+      "inStock": true,
+      "hasVariants": true,
+      "variantCount": 2,
+      "variantAxes": [
+        {
+          "name": "Color",
+          "values": [
+            "Black",
+            "Tan"
+          ]
+        }
+      ],
+      "productAttributes": {
+        "Material": "Faux leather"
+      },
+      "tags": [],
+      "keywords": [
+        "handbag",
+        "purse",
+        "shoulder bag",
+        "ladies bag"
+      ],
+      "imageCount": 3
+    },
+    {
+      "id": "p-019",
+      "slug": "canvas-court-sneakers",
+      "name": "Canvas Court Sneakers",
+      "departmentId": "dep-footwear-sneakers",
+      "departmentPath": "Footwear > Sneakers",
+      "brand": null,
+      "price": 890,
+      "priceRange": {
+        "min": 890,
+        "max": 890
+      },
+      "compareAtPrice": null,
+      "inStock": true,
+      "hasVariants": true,
+      "variantCount": 6,
+      "variantAxes": [
+        {
+          "name": "Color",
+          "values": [
+            "White",
+            "Navy"
+          ]
+        },
+        {
+          "name": "Size",
+          "values": [
+            "40",
+            "41",
+            "42"
+          ]
+        }
+      ],
+      "productAttributes": {
+        "Style": "Low top"
+      },
+      "tags": [
+        "new"
+      ],
+      "keywords": [
+        "shoes",
+        "trainers",
+        "canvas shoes",
+        "tennis shoes",
+        "kicks",
+        "footwear"
+      ],
+      "imageCount": 3
+    },
+    {
+      "id": "p-020",
+      "slug": "pool-slides",
+      "name": "Pool Slides",
+      "departmentId": "dep-footwear-slides",
+      "departmentPath": "Footwear > Slides",
+      "brand": null,
+      "price": 249,
+      "priceRange": {
+        "min": 249,
+        "max": 249
+      },
+      "compareAtPrice": null,
+      "inStock": true,
+      "hasVariants": true,
+      "variantCount": 3,
+      "variantAxes": [
+        {
+          "name": "Size",
+          "values": [
+            "38",
+            "39",
+            "40"
+          ]
+        }
+      ],
+      "productAttributes": {
+        "Color": "Black"
+      },
+      "tags": [],
+      "keywords": [
+        "slippers",
+        "sandals",
+        "shoes",
+        "pool slides",
+        "footwear"
+      ],
+      "imageCount": 3
+    },
+    {
+      "id": "p-021",
+      "slug": "leather-loafer",
+      "name": "Leather Loafer",
+      "departmentId": "dep-footwear-loafers",
+      "departmentPath": "Footwear > Loafers",
+      "brand": null,
+      "price": 1290,
+      "priceRange": {
+        "min": 1290,
+        "max": 1290
+      },
+      "compareAtPrice": null,
+      "inStock": false,
+      "hasVariants": true,
+      "variantCount": 2,
+      "variantAxes": [
+        {
+          "name": "Size",
+          "values": [
+            "40",
+            "41"
+          ]
+        }
+      ],
+      "productAttributes": {
+        "Color": "Black"
+      },
+      "tags": [],
+      "keywords": [
+        "shoes",
+        "penny loafer",
+        "formal shoes",
+        "leather shoes",
+        "footwear"
+      ],
+      "imageCount": 3
+    },
+    {
+      "id": "p-022",
+      "slug": "amber-oud-eau-de-parfum",
+      "name": "Amber Oud Eau de Parfum",
+      "departmentId": "dep-fragrance",
+      "departmentPath": "Fragrance",
+      "brand": null,
+      "price": 345,
+      "priceRange": {
+        "min": 345,
+        "max": 345
+      },
+      "compareAtPrice": null,
+      "inStock": true,
+      "hasVariants": false,
+      "variantCount": 0,
+      "variantAxes": [],
+      "productAttributes": {
+        "Volume": "100ml"
+      },
+      "tags": [],
+      "keywords": [
+        "perfume",
+        "cologne",
+        "parfum",
+        "oud",
+        "mens perfume",
+        "fragrance",
+        "scent"
+      ],
+      "imageCount": 3
+    },
+    {
+      "id": "p-023",
+      "slug": "ivory-jasmine-eau-de-parfum",
+      "name": "Ivory Jasmine Eau de Parfum",
+      "departmentId": "dep-fragrance",
+      "departmentPath": "Fragrance",
+      "brand": null,
+      "price": 345,
+      "priceRange": {
+        "min": 345,
+        "max": 345
+      },
+      "compareAtPrice": null,
+      "inStock": true,
+      "hasVariants": false,
+      "variantCount": 0,
+      "variantAxes": [],
+      "productAttributes": {
+        "Volume": "100ml"
+      },
+      "tags": [],
+      "keywords": [
+        "perfume",
+        "parfum",
+        "womens perfume",
+        "jasmine",
+        "floral",
+        "fragrance",
+        "scent"
+      ],
+      "imageCount": 3
+    },
+    {
+      "id": "p-024",
+      "slug": "woven-storage-basket",
+      "name": "Woven Storage Basket",
+      "departmentId": "dep-household-home",
+      "departmentPath": "Household > Home care",
+      "brand": null,
+      "price": 180,
+      "priceRange": {
+        "min": 180,
+        "max": 180
+      },
+      "compareAtPrice": null,
+      "inStock": true,
+      "hasVariants": false,
+      "variantCount": 0,
+      "variantAxes": [],
+      "productAttributes": {
+        "Material": "Rattan"
+      },
+      "tags": [],
+      "keywords": [
+        "laundry basket",
+        "storage basket",
+        "rattan",
+        "hamper",
+        "basket"
+      ],
+      "imageCount": 3
+    },
+    {
+      "id": "p-025",
+      "slug": "ceramic-serving-bowl-set",
+      "name": "Ceramic Serving Bowl Set",
+      "departmentId": "dep-household-kitchen",
+      "departmentPath": "Household > Kitchen",
+      "brand": null,
+      "price": 145,
+      "priceRange": {
+        "min": 145,
+        "max": 145
+      },
+      "compareAtPrice": 175,
+      "inStock": true,
+      "hasVariants": false,
+      "variantCount": 0,
+      "variantAxes": [],
+      "productAttributes": {
+        "Set": "3 pieces"
+      },
+      "tags": [
+        "sale"
+      ],
+      "keywords": [
+        "serving bowls",
+        "dishes",
+        "tableware",
+        "stoneware",
+        "kitchen"
+      ],
+      "imageCount": 3
+    },
+    {
+      "id": "p-026",
+      "slug": "bamboo-kitchen-utensil-set",
+      "name": "Bamboo Kitchen Utensil Set",
+      "departmentId": "dep-household-kitchen",
+      "departmentPath": "Household > Kitchen",
+      "brand": null,
+      "price": 95,
+      "priceRange": {
+        "min": 95,
+        "max": 95
+      },
+      "compareAtPrice": null,
+      "inStock": true,
+      "hasVariants": false,
+      "variantCount": 0,
+      "variantAxes": [],
+      "productAttributes": {
+        "Set": "4 pieces"
+      },
+      "tags": [],
+      "keywords": [
+        "kitchen tools",
+        "cooking utensils",
+        "spatula",
+        "spoon",
+        "kitchen"
+      ],
+      "imageCount": 3
+    },
+    {
+      "id": "p-027",
+      "slug": "linen-tea-towels",
+      "name": "Linen Tea Towels",
+      "departmentId": "dep-household-kitchen",
+      "departmentPath": "Household > Kitchen",
+      "brand": null,
+      "price": 75,
+      "priceRange": {
+        "min": 75,
+        "max": 75
+      },
+      "compareAtPrice": null,
+      "inStock": true,
+      "hasVariants": false,
+      "variantCount": 0,
+      "variantAxes": [],
+      "productAttributes": {
+        "Pack": "2"
+      },
+      "tags": [],
+      "keywords": [
+        "kitchen towels",
+        "dish towels",
+        "tea towel",
+        "linen",
+        "kitchen"
+      ],
+      "imageCount": 3
+    },
+    {
+      "id": "p-028",
+      "slug": "lavender-laundry-soap-bar",
+      "name": "Lavender Laundry Soap Bar",
+      "departmentId": "dep-household-home",
+      "departmentPath": "Household > Home care",
+      "brand": null,
+      "price": 32,
+      "priceRange": {
+        "min": 32,
+        "max": 32
+      },
+      "compareAtPrice": null,
+      "inStock": true,
+      "hasVariants": false,
+      "variantCount": 0,
+      "variantAxes": [],
+      "productAttributes": {
+        "Weight": "200g"
+      },
+      "tags": [],
+      "keywords": [
+        "laundry soap",
+        "detergent",
+        "washing soap",
+        "laundry bar",
+        "soap"
+      ],
+      "imageCount": 3
+    }
+  ],
+  "seedData": {
+    "note": "Full seed JSON used by the storefront mock. Admin should seed DB to match.",
+    "departmentsFile": "src/data/departments.json",
+    "productsFile": "src/data/products.json",
+    "departments": [
+      {
+        "id": "dep-pantry",
+        "slug": "pantry",
+        "name": "Pantry",
+        "parentId": null,
+        "sortOrder": 1,
+        "image": "/images/products/golden-basmati-rice-1.jpg",
+        "description": "Rice, oils, snacks and everyday cooking goods."
+      },
+      {
+        "id": "dep-pantry-rice",
+        "slug": "rice-grains",
+        "name": "Rice & grains",
+        "parentId": "dep-pantry",
+        "sortOrder": 11,
+        "image": "/images/products/golden-basmati-rice-1.jpg",
+        "description": "Basmati, jasmine and everyday rice."
+      },
+      {
+        "id": "dep-pantry-oils",
+        "slug": "oils",
+        "name": "Oils",
+        "parentId": "dep-pantry",
+        "sortOrder": 12,
+        "image": "/images/products/extra-virgin-olive-oil-1.jpg",
+        "description": "Cooking and finishing oils."
+      },
+      {
+        "id": "dep-pantry-dairy",
+        "slug": "dairy",
+        "name": "Dairy",
+        "parentId": "dep-pantry",
+        "sortOrder": 13,
+        "image": "/images/products/greek-style-yoghurt-1.jpg",
+        "description": "Yoghurt, milk powder and tinned milk."
+      },
+      {
+        "id": "dep-beauty",
+        "slug": "beauty",
+        "name": "Beauty",
+        "parentId": null,
+        "sortOrder": 2,
+        "image": "/images/products/velvet-musk-body-mist-1.jpg",
+        "description": "Body lotions, care sets and dressing-table essentials."
+      },
+      {
+        "id": "dep-beauty-body",
+        "slug": "body-mists",
+        "name": "Body mists",
+        "parentId": "dep-beauty",
+        "sortOrder": 21,
+        "image": "/images/products/velvet-musk-body-mist-1.jpg",
+        "description": "Light body sprays for after lotion."
+      },
+      {
+        "id": "dep-beauty-scent",
+        "slug": "attar-edt",
+        "name": "Attar & EDT",
+        "parentId": "dep-beauty",
+        "sortOrder": 22,
+        "image": "/images/products/saffron-cedar-attar-oil-1.jpg",
+        "description": "Perfume oils and eau de toilette."
+      },
+      {
+        "id": "dep-fashion",
+        "slug": "fashion",
+        "name": "Fashion",
+        "parentId": null,
+        "sortOrder": 3,
+        "image": "/images/products/ivory-linen-wrap-dress-1.jpg",
+        "description": "Bags, dresses and accessories."
+      },
+      {
+        "id": "dep-fashion-dresses",
+        "slug": "dresses",
+        "name": "Dresses",
+        "parentId": "dep-fashion",
+        "sortOrder": 31,
+        "image": "/images/products/ivory-linen-wrap-dress-1.jpg",
+        "description": "Day dresses, wraps and occasion pieces."
+      },
+      {
+        "id": "dep-fashion-bags",
+        "slug": "bags",
+        "name": "Bags",
+        "parentId": "dep-fashion",
+        "sortOrder": 32,
+        "image": "/images/products/structured-shoulder-bag-1.jpg",
+        "description": "Shoulder bags and everyday carry."
+      },
+      {
+        "id": "dep-footwear",
+        "slug": "footwear",
+        "name": "Footwear",
+        "parentId": null,
+        "sortOrder": 4,
+        "image": "/images/products/canvas-court-sneakers-1.jpg",
+        "description": "Slides, sneakers and branded footwear."
+      },
+      {
+        "id": "dep-footwear-sneakers",
+        "slug": "sneakers",
+        "name": "Sneakers",
+        "parentId": "dep-footwear",
+        "sortOrder": 41,
+        "image": "/images/products/canvas-court-sneakers-1.jpg",
+        "description": "Court and canvas sneakers."
+      },
+      {
+        "id": "dep-footwear-slides",
+        "slug": "slides",
+        "name": "Slides",
+        "parentId": "dep-footwear",
+        "sortOrder": 42,
+        "image": "/images/products/pool-slides-1.jpg",
+        "description": "Pool slides and moulded sandals."
+      },
+      {
+        "id": "dep-footwear-loafers",
+        "slug": "loafers",
+        "name": "Loafers",
+        "parentId": "dep-footwear",
+        "sortOrder": 43,
+        "image": "/images/products/leather-loafer-1.jpg",
+        "description": "Penny loafers and leather flats."
+      },
+      {
+        "id": "dep-fragrance",
+        "slug": "fragrance",
+        "name": "Fragrance",
+        "parentId": null,
+        "sortOrder": 5,
+        "image": "/images/products/amber-oud-eau-de-parfum-1.jpg",
+        "description": "Men and women fragrances in boxed retail sizes."
+      },
+      {
+        "id": "dep-household",
+        "slug": "household",
+        "name": "Household",
+        "parentId": null,
+        "sortOrder": 6,
+        "image": "/images/products/woven-storage-basket-1.jpg",
+        "description": "Home pieces and cleaning essentials for everyday use."
+      },
+      {
+        "id": "dep-household-kitchen",
+        "slug": "kitchen",
+        "name": "Kitchen",
+        "parentId": "dep-household",
+        "sortOrder": 61,
+        "image": "/images/products/ceramic-serving-bowl-set-1.jpg",
+        "description": "Bowls, utensils and tea towels."
+      },
+      {
+        "id": "dep-household-home",
+        "slug": "home-care",
+        "name": "Home care",
+        "parentId": "dep-household",
+        "sortOrder": 62,
+        "image": "/images/products/lavender-laundry-soap-bar-1.jpg",
+        "description": "Storage, laundry and everyday home goods."
+      }
+    ],
+    "products": [
+      {
+        "id": "p-001",
+        "slug": "golden-basmati-rice",
+        "name": "Golden Basmati Rice",
+        "departmentId": "dep-pantry-rice",
+        "brand": "Raj pantry",
+        "description": "Aged long-grain basmati. Cooks separate and stays fluffy. UK packed. Sold by weight.",
+        "imageUrls": [
+          "/images/products/golden-basmati-rice-1.jpg",
+          "/images/products/golden-basmati-rice-2.jpg",
+          "/images/products/golden-basmati-rice-3.jpg"
+        ],
+        "price": 189,
+        "compareAtPrice": 215,
+        "inStock": true,
+        "createdAt": "2026-05-12",
+        "popularity": 96,
+        "attributes": {
+          "Origin": "UK packed"
+        },
+        "variants": [
+          {
+            "id": "v-001-1",
+            "sku": "RICE-BAS-1",
+            "attributes": {
+              "Weight": "1kg"
+            },
+            "price": 45,
+            "stock": 40
+          },
+          {
+            "id": "v-001-5",
+            "sku": "RICE-BAS-5",
+            "attributes": {
+              "Weight": "5kg"
+            },
+            "price": 189,
+            "stock": 22
+          },
+          {
+            "id": "v-001-10",
+            "sku": "RICE-BAS-10",
+            "attributes": {
+              "Weight": "10kg"
+            },
+            "price": 349,
+            "stock": 8
+          }
+        ],
+        "tags": [
+          "sale"
+        ],
+        "keywords": [
+          "rice",
+          "basmati",
+          "long grain",
+          "white rice",
+          "staple",
+          "pantry"
+        ]
+      },
+      {
+        "id": "p-002",
+        "slug": "jasmine-fragrant-rice",
+        "name": "Jasmine Fragrant Rice",
+        "departmentId": "dep-pantry-rice",
+        "brand": "Raj pantry",
+        "description": "Soft, floral jasmine rice milled for everyday pots. Packed in the UK.",
+        "imageUrls": [
+          "/images/products/jasmine-fragrant-rice-1.jpg",
+          "/images/products/jasmine-fragrant-rice-2.jpg",
+          "/images/products/jasmine-fragrant-rice-3.jpg"
+        ],
+        "price": 165,
+        "inStock": true,
+        "createdAt": "2026-04-02",
+        "popularity": 88,
+        "attributes": {
+          "Origin": "UK packed"
+        },
+        "variants": [
+          {
+            "id": "v-002-1",
+            "sku": "RICE-JAS-1",
+            "attributes": {
+              "Weight": "1kg"
+            },
+            "price": 42,
+            "stock": 30
+          },
+          {
+            "id": "v-002-5",
+            "sku": "RICE-JAS-5",
+            "attributes": {
+              "Weight": "5kg"
+            },
+            "price": 165,
+            "stock": 18
+          }
+        ],
+        "keywords": [
+          "rice",
+          "jasmine",
+          "fragrant rice",
+          "thai rice",
+          "staple",
+          "pantry"
+        ]
+      },
+      {
+        "id": "p-003",
+        "slug": "brown-long-grain-rice",
+        "name": "Brown Long Grain Rice",
+        "departmentId": "dep-pantry-rice",
+        "description": "Wholegrain rice with the bran left on. Nutty, slower cook.",
+        "imageUrls": [
+          "/images/products/brown-long-grain-rice-1.jpg",
+          "/images/products/brown-long-grain-rice-2.jpg",
+          "/images/products/brown-long-grain-rice-3.jpg"
+        ],
+        "price": 155,
+        "inStock": true,
+        "createdAt": "2026-03-18",
+        "popularity": 71,
+        "attributes": {
+          "Weight": "5kg"
+        },
+        "keywords": [
+          "rice",
+          "brown rice",
+          "wholegrain",
+          "whole grain",
+          "staple",
+          "pantry"
+        ]
+      },
+      {
+        "id": "p-004",
+        "slug": "extra-virgin-olive-oil",
+        "name": "Extra Virgin Olive Oil",
+        "departmentId": "dep-pantry-oils",
+        "description": "First cold press in dark glass. For finishing, not deep frying.",
+        "imageUrls": [
+          "/images/products/extra-virgin-olive-oil-1.jpg",
+          "/images/products/extra-virgin-olive-oil-2.jpg",
+          "/images/products/extra-virgin-olive-oil-3.jpg"
+        ],
+        "price": 95,
+        "inStock": true,
+        "createdAt": "2026-03-11",
+        "popularity": 70,
+        "attributes": {
+          "Origin": "Mediterranean"
+        },
+        "variants": [
+          {
+            "id": "v-004-250",
+            "sku": "OIL-OLV-250",
+            "attributes": {
+              "Volume": "250ml"
+            },
+            "price": 55,
+            "stock": 16
+          },
+          {
+            "id": "v-004-500",
+            "sku": "OIL-OLV-500",
+            "attributes": {
+              "Volume": "500ml"
+            },
+            "price": 95,
+            "stock": 12
+          },
+          {
+            "id": "v-004-1",
+            "sku": "OIL-OLV-1L",
+            "attributes": {
+              "Volume": "1L"
+            },
+            "price": 165,
+            "stock": 6
+          }
+        ],
+        "keywords": [
+          "olive oil",
+          "extra virgin",
+          "cooking oil",
+          "salad oil",
+          "evoo"
+        ]
+      },
+      {
+        "id": "p-005",
+        "slug": "coconut-cooking-oil",
+        "name": "Coconut Cooking Oil",
+        "departmentId": "dep-pantry-oils",
+        "description": "Refined coconut oil for high-heat cooking. Neutral taste.",
+        "imageUrls": [
+          "/images/products/coconut-cooking-oil-1.jpg",
+          "/images/products/coconut-cooking-oil-2.jpg",
+          "/images/products/coconut-cooking-oil-3.jpg"
+        ],
+        "price": 62,
+        "inStock": true,
+        "createdAt": "2026-02-14",
+        "popularity": 66,
+        "attributes": {
+          "Volume": "500ml"
+        },
+        "keywords": [
+          "coconut oil",
+          "cooking oil",
+          "frying oil"
+        ]
+      },
+      {
+        "id": "p-006",
+        "slug": "cold-pressed-groundnut-oil",
+        "name": "Cold Pressed Groundnut Oil",
+        "departmentId": "dep-pantry-oils",
+        "description": "Peanut oil with a light roast note. For frying and marinades.",
+        "imageUrls": [
+          "/images/products/cold-pressed-groundnut-oil-1.jpg",
+          "/images/products/cold-pressed-groundnut-oil-2.jpg",
+          "/images/products/cold-pressed-groundnut-oil-3.jpg"
+        ],
+        "price": 58,
+        "inStock": true,
+        "createdAt": "2026-01-30",
+        "popularity": 61,
+        "attributes": {
+          "Volume": "500ml"
+        },
+        "keywords": [
+          "groundnut oil",
+          "peanut oil",
+          "cooking oil"
+        ]
+      },
+      {
+        "id": "p-007",
+        "slug": "greek-style-yoghurt",
+        "name": "Greek Style Yoghurt",
+        "departmentId": "dep-pantry-dairy",
+        "description": "Thick strained yoghurt. Keep chilled after opening.",
+        "imageUrls": [
+          "/images/products/greek-style-yoghurt-1.jpg",
+          "/images/products/greek-style-yoghurt-2.jpg",
+          "/images/products/greek-style-yoghurt-3.jpg"
+        ],
+        "price": 28,
+        "inStock": true,
+        "createdAt": "2026-07-08",
+        "popularity": 74,
+        "attributes": {
+          "Pack": "500g"
+        },
+        "tags": [
+          "new"
+        ],
+        "keywords": [
+          "yogurt",
+          "yoghurt",
+          "greek yogurt",
+          "dairy"
+        ]
+      },
+      {
+        "id": "p-008",
+        "slug": "full-cream-milk-powder",
+        "name": "Full Cream Milk Powder",
+        "departmentId": "dep-pantry-dairy",
+        "description": "Whole milk powder for tea, baking and emergency fridge days.",
+        "imageUrls": [
+          "/images/products/full-cream-milk-powder-1.jpg",
+          "/images/products/full-cream-milk-powder-2.jpg",
+          "/images/products/full-cream-milk-powder-3.jpg"
+        ],
+        "price": 85,
+        "inStock": true,
+        "createdAt": "2026-04-21",
+        "popularity": 68,
+        "attributes": {
+          "Weight": "900g"
+        },
+        "keywords": [
+          "milk powder",
+          "powdered milk",
+          "full cream",
+          "dairy"
+        ]
+      },
+      {
+        "id": "p-009",
+        "slug": "evaporated-milk-six-pack",
+        "name": "Evaporated Milk Six Pack",
+        "departmentId": "dep-pantry-dairy",
+        "description": "Shelf-stable evaporated milk. Six tins in a wrap.",
+        "imageUrls": [
+          "/images/products/evaporated-milk-six-pack-1.jpg",
+          "/images/products/evaporated-milk-six-pack-2.jpg",
+          "/images/products/evaporated-milk-six-pack-3.jpg"
+        ],
+        "price": 72,
+        "inStock": true,
+        "createdAt": "2026-05-03",
+        "popularity": 69,
+        "attributes": {
+          "Pack": "6 x 410g"
+        },
+        "keywords": [
+          "evaporated milk",
+          "tinned milk",
+          "canned milk",
+          "dairy"
+        ]
+      },
+      {
+        "id": "p-010",
+        "slug": "velvet-musk-body-mist",
+        "name": "Velvet Musk Body Mist",
+        "departmentId": "dep-beauty-body",
+        "description": "Light body mist for after lotion. UK retail bottle.",
+        "imageUrls": [
+          "/images/products/velvet-musk-body-mist-1.jpg",
+          "/images/products/velvet-musk-body-mist-2.jpg",
+          "/images/products/velvet-musk-body-mist-3.jpg"
+        ],
+        "price": 89,
+        "inStock": true,
+        "createdAt": "2026-06-08",
+        "popularity": 77,
+        "attributes": {
+          "Volume": "200ml"
+        },
+        "keywords": [
+          "body spray",
+          "body mist",
+          "perfume",
+          "fragrance",
+          "musk",
+          "scent"
+        ]
+      },
+      {
+        "id": "p-011",
+        "slug": "saffron-cedar-attar-oil",
+        "name": "Saffron Cedar Attar Oil",
+        "departmentId": "dep-beauty-scent",
+        "description": "Concentrated perfume oil. Roll on pulse points. Boxed.",
+        "imageUrls": [
+          "/images/products/saffron-cedar-attar-oil-1.jpg",
+          "/images/products/saffron-cedar-attar-oil-2.jpg",
+          "/images/products/saffron-cedar-attar-oil-3.jpg"
+        ],
+        "price": 145,
+        "inStock": true,
+        "createdAt": "2026-08-01",
+        "popularity": 64,
+        "attributes": {
+          "Volume": "12ml"
+        },
+        "tags": [
+          "new"
+        ],
+        "keywords": [
+          "perfume oil",
+          "attar",
+          "fragrance",
+          "concentrated perfume",
+          "oud",
+          "scent"
+        ]
+      },
+      {
+        "id": "p-012",
+        "slug": "rose-nectar-eau-de-toilette",
+        "name": "Rose Nectar Eau de Toilette",
+        "departmentId": "dep-beauty-scent",
+        "description": "Soft rose EDT for daytime. Retail boxed 50ml.",
+        "imageUrls": [
+          "/images/products/rose-nectar-eau-de-toilette-1.jpg",
+          "/images/products/rose-nectar-eau-de-toilette-2.jpg",
+          "/images/products/rose-nectar-eau-de-toilette-3.jpg"
+        ],
+        "price": 210,
+        "inStock": true,
+        "createdAt": "2026-06-19",
+        "popularity": 63,
+        "attributes": {
+          "Volume": "50ml"
+        },
+        "keywords": [
+          "perfume",
+          "fragrance",
+          "edt",
+          "eau de toilette",
+          "rose perfume",
+          "scent"
+        ]
+      },
+      {
+        "id": "p-013",
+        "slug": "ivory-linen-wrap-dress",
+        "name": "Ivory Linen Wrap Dress",
+        "departmentId": "dep-fashion-dresses",
+        "description": "Cotton-linen wrap cut for warm weather. UK goods.",
+        "imageUrls": [
+          "/images/products/ivory-linen-wrap-dress-1.jpg",
+          "/images/products/ivory-linen-wrap-dress-2.jpg",
+          "/images/products/ivory-linen-wrap-dress-3.jpg"
+        ],
+        "price": 420,
+        "inStock": true,
+        "createdAt": "2026-05-22",
+        "popularity": 60,
+        "attributes": {
+          "Fabric": "Linen"
+        },
+        "variants": [
+          {
+            "id": "v-013-s",
+            "sku": "DRS-LIN-S",
+            "attributes": {
+              "Size": "S"
+            },
+            "price": 420,
+            "stock": 4
+          },
+          {
+            "id": "v-013-m",
+            "sku": "DRS-LIN-M",
+            "attributes": {
+              "Size": "M"
+            },
+            "price": 420,
+            "stock": 6
+          },
+          {
+            "id": "v-013-l",
+            "sku": "DRS-LIN-L",
+            "attributes": {
+              "Size": "L"
+            },
+            "price": 420,
+            "stock": 3
+          }
+        ],
+        "keywords": [
+          "dress",
+          "wrap dress",
+          "linen dress",
+          "women clothing",
+          "outfit"
+        ]
+      },
+      {
+        "id": "p-014",
+        "slug": "cotton-poplin-day-dress",
+        "name": "Cotton Poplin Day Dress",
+        "departmentId": "dep-fashion-dresses",
+        "description": "Crisp poplin day dress. Machine wash cold.",
+        "imageUrls": [
+          "/images/products/cotton-poplin-day-dress-1.jpg",
+          "/images/products/cotton-poplin-day-dress-2.jpg",
+          "/images/products/cotton-poplin-day-dress-3.jpg"
+        ],
+        "price": 380,
+        "inStock": true,
+        "createdAt": "2026-04-09",
+        "popularity": 57,
+        "attributes": {
+          "Fabric": "Cotton"
+        },
+        "variants": [
+          {
+            "id": "v-014-s",
+            "sku": "DRS-POP-S",
+            "attributes": {
+              "Size": "S"
+            },
+            "price": 380,
+            "stock": 5
+          },
+          {
+            "id": "v-014-m",
+            "sku": "DRS-POP-M",
+            "attributes": {
+              "Size": "M"
+            },
+            "price": 380,
+            "stock": 5
+          },
+          {
+            "id": "v-014-l",
+            "sku": "DRS-POP-L",
+            "attributes": {
+              "Size": "L"
+            },
+            "price": 380,
+            "stock": 2
+          }
+        ],
+        "keywords": [
+          "dress",
+          "day dress",
+          "cotton dress",
+          "women clothing",
+          "outfit"
+        ]
+      },
+      {
+        "id": "p-015",
+        "slug": "ankara-print-a-line-dress",
+        "name": "Ankara Print A-Line Dress",
+        "departmentId": "dep-fashion-dresses",
+        "description": "A-line wax print dress. Pattern placement varies by piece.",
+        "imageUrls": [
+          "/images/products/ankara-print-a-line-dress-1.jpg",
+          "/images/products/ankara-print-a-line-dress-2.jpg",
+          "/images/products/ankara-print-a-line-dress-3.jpg"
+        ],
+        "price": 455,
+        "inStock": true,
+        "createdAt": "2026-07-11",
+        "popularity": 72,
+        "attributes": {
+          "Fabric": "Wax print"
+        },
+        "variants": [
+          {
+            "id": "v-015-s",
+            "sku": "DRS-ANK-S",
+            "attributes": {
+              "Size": "S"
+            },
+            "price": 455,
+            "stock": 3
+          },
+          {
+            "id": "v-015-m",
+            "sku": "DRS-ANK-M",
+            "attributes": {
+              "Size": "M"
+            },
+            "price": 455,
+            "stock": 4
+          },
+          {
+            "id": "v-015-l",
+            "sku": "DRS-ANK-L",
+            "attributes": {
+              "Size": "L"
+            },
+            "price": 455,
+            "stock": 1
+          }
+        ],
+        "tags": [
+          "new"
+        ],
+        "keywords": [
+          "dress",
+          "ankara",
+          "print dress",
+          "women clothing",
+          "outfit"
+        ]
+      },
+      {
+        "id": "p-016",
+        "slug": "terracotta-midi-shirt-dress",
+        "name": "Terracotta Midi Shirt Dress",
+        "departmentId": "dep-fashion-dresses",
+        "description": "Midi shirt dress with a belt. USA goods.",
+        "imageUrls": [
+          "/images/products/terracotta-midi-shirt-dress-1.jpg",
+          "/images/products/terracotta-midi-shirt-dress-2.jpg",
+          "/images/products/terracotta-midi-shirt-dress-3.jpg"
+        ],
+        "price": 399,
+        "compareAtPrice": 470,
+        "inStock": true,
+        "createdAt": "2026-03-28",
+        "popularity": 55,
+        "attributes": {
+          "Length": "Midi"
+        },
+        "tags": [
+          "sale"
+        ],
+        "keywords": [
+          "dress",
+          "shirt dress",
+          "midi dress",
+          "women clothing",
+          "outfit"
+        ]
+      },
+      {
+        "id": "p-017",
+        "slug": "pleated-chiffon-maxi-dress",
+        "name": "Pleated Chiffon Maxi Dress",
+        "departmentId": "dep-fashion-dresses",
+        "description": "Floaty chiffon maxi. Lined to the knee.",
+        "imageUrls": [
+          "/images/products/pleated-chiffon-maxi-dress-1.jpg",
+          "/images/products/pleated-chiffon-maxi-dress-2.jpg",
+          "/images/products/pleated-chiffon-maxi-dress-3.jpg"
+        ],
+        "price": 520,
+        "inStock": true,
+        "createdAt": "2026-05-30",
+        "popularity": 59,
+        "attributes": {
+          "Length": "Maxi"
+        },
+        "keywords": [
+          "dress",
+          "maxi dress",
+          "chiffon",
+          "women clothing",
+          "outfit"
+        ]
+      },
+      {
+        "id": "p-018",
+        "slug": "structured-shoulder-bag",
+        "name": "Structured Shoulder Bag",
+        "departmentId": "dep-fashion-bags",
+        "brand": "UK goods",
+        "description": "Black structured shoulder bag. Not affiliated with any high-street house. Check the listing photos.",
+        "imageUrls": [
+          "/images/products/structured-shoulder-bag-1.jpg",
+          "/images/products/structured-shoulder-bag-2.jpg",
+          "/images/products/structured-shoulder-bag-3.jpg"
+        ],
+        "price": 399,
+        "inStock": true,
+        "createdAt": "2026-07-28",
+        "popularity": 82,
+        "attributes": {
+          "Material": "Faux leather"
+        },
+        "variants": [
+          {
+            "id": "v-018-blk",
+            "sku": "BAG-STR-BLK",
+            "attributes": {
+              "Color": "Black"
+            },
+            "price": 399,
+            "stock": 5,
+            "imageUrls": [
+              "/images/products/structured-shoulder-bag-1.jpg"
+            ]
+          },
+          {
+            "id": "v-018-tan",
+            "sku": "BAG-STR-TAN",
+            "attributes": {
+              "Color": "Tan"
+            },
+            "price": 399,
+            "stock": 3,
+            "imageUrls": [
+              "/images/products/structured-shoulder-bag-2.jpg"
+            ]
+          }
+        ],
+        "keywords": [
+          "handbag",
+          "purse",
+          "shoulder bag",
+          "ladies bag"
+        ]
+      },
+      {
+        "id": "p-019",
+        "slug": "canvas-court-sneakers",
+        "name": "Canvas Court Sneakers",
+        "departmentId": "dep-footwear-sneakers",
+        "description": "Low court sneakers. USA stock. Pick colour and size.",
+        "imageUrls": [
+          "/images/products/canvas-court-sneakers-1.jpg",
+          "/images/products/canvas-court-sneakers-2.jpg",
+          "/images/products/canvas-court-sneakers-3.jpg"
+        ],
+        "price": 890,
+        "inStock": true,
+        "createdAt": "2026-08-05",
+        "popularity": 80,
+        "attributes": {
+          "Style": "Low top"
+        },
+        "variants": [
+          {
+            "id": "v-019-w40",
+            "sku": "SNK-WHT-40",
+            "attributes": {
+              "Color": "White",
+              "Size": "40"
+            },
+            "price": 890,
+            "stock": 4,
+            "imageUrls": [
+              "/images/products/canvas-court-sneakers-1.jpg"
+            ]
+          },
+          {
+            "id": "v-019-w41",
+            "sku": "SNK-WHT-41",
+            "attributes": {
+              "Color": "White",
+              "Size": "41"
+            },
+            "price": 890,
+            "stock": 3,
+            "imageUrls": [
+              "/images/products/canvas-court-sneakers-1.jpg"
+            ]
+          },
+          {
+            "id": "v-019-w42",
+            "sku": "SNK-WHT-42",
+            "attributes": {
+              "Color": "White",
+              "Size": "42"
+            },
+            "price": 890,
+            "stock": 0,
+            "imageUrls": [
+              "/images/products/canvas-court-sneakers-1.jpg"
+            ]
+          },
+          {
+            "id": "v-019-n40",
+            "sku": "SNK-NVY-40",
+            "attributes": {
+              "Color": "Navy",
+              "Size": "40"
+            },
+            "price": 890,
+            "stock": 2,
+            "imageUrls": [
+              "/images/products/canvas-court-sneakers-2.jpg"
+            ]
+          },
+          {
+            "id": "v-019-n41",
+            "sku": "SNK-NVY-41",
+            "attributes": {
+              "Color": "Navy",
+              "Size": "41"
+            },
+            "price": 890,
+            "stock": 2,
+            "imageUrls": [
+              "/images/products/canvas-court-sneakers-2.jpg"
+            ]
+          },
+          {
+            "id": "v-019-n42",
+            "sku": "SNK-NVY-42",
+            "attributes": {
+              "Color": "Navy",
+              "Size": "42"
+            },
+            "price": 890,
+            "stock": 1,
+            "imageUrls": [
+              "/images/products/canvas-court-sneakers-2.jpg"
+            ]
+          }
+        ],
+        "tags": [
+          "new"
+        ],
+        "keywords": [
+          "shoes",
+          "trainers",
+          "canvas shoes",
+          "tennis shoes",
+          "kicks",
+          "footwear"
+        ]
+      },
+      {
+        "id": "p-020",
+        "slug": "pool-slides",
+        "name": "Pool Slides",
+        "departmentId": "dep-footwear-slides",
+        "description": "Moulded footbed slides. Size 40 is waiting on a restock.",
+        "imageUrls": [
+          "/images/products/pool-slides-1.jpg",
+          "/images/products/pool-slides-2.jpg",
+          "/images/products/pool-slides-3.jpg"
+        ],
+        "price": 249,
+        "inStock": true,
+        "createdAt": "2026-07-15",
+        "popularity": 73,
+        "attributes": {
+          "Color": "Black"
+        },
+        "variants": [
+          {
+            "id": "v-020-38",
+            "sku": "SLD-BLK-38",
+            "attributes": {
+              "Size": "38"
+            },
+            "price": 249,
+            "stock": 4
+          },
+          {
+            "id": "v-020-39",
+            "sku": "SLD-BLK-39",
+            "attributes": {
+              "Size": "39"
+            },
+            "price": 249,
+            "stock": 2
+          },
+          {
+            "id": "v-020-40",
+            "sku": "SLD-BLK-40",
+            "attributes": {
+              "Size": "40"
+            },
+            "price": 249,
+            "stock": 0
+          }
+        ],
+        "keywords": [
+          "slippers",
+          "sandals",
+          "shoes",
+          "pool slides",
+          "footwear"
+        ]
+      },
+      {
+        "id": "p-021",
+        "slug": "leather-loafer",
+        "name": "Leather Loafer",
+        "departmentId": "dep-footwear-loafers",
+        "description": "Penny loafer in smooth leather. UK last. Currently sold out.",
+        "imageUrls": [
+          "/images/products/leather-loafer-1.jpg",
+          "/images/products/leather-loafer-2.jpg",
+          "/images/products/leather-loafer-3.jpg"
+        ],
+        "price": 1290,
+        "inStock": false,
+        "createdAt": "2026-06-30",
+        "popularity": 75,
+        "attributes": {
+          "Color": "Black"
+        },
+        "variants": [
+          {
+            "id": "v-021-40",
+            "sku": "LOF-BLK-40",
+            "attributes": {
+              "Size": "40"
+            },
+            "price": 1290,
+            "stock": 0
+          },
+          {
+            "id": "v-021-41",
+            "sku": "LOF-BLK-41",
+            "attributes": {
+              "Size": "41"
+            },
+            "price": 1290,
+            "stock": 0
+          }
+        ],
+        "keywords": [
+          "shoes",
+          "penny loafer",
+          "formal shoes",
+          "leather shoes",
+          "footwear"
+        ]
+      },
+      {
+        "id": "p-022",
+        "slug": "amber-oud-eau-de-parfum",
+        "name": "Amber Oud Eau de Parfum",
+        "departmentId": "dep-fragrance",
+        "description": "Warm amber and oud. Boxed 100ml. Check the bottle in the photos.",
+        "imageUrls": [
+          "/images/products/amber-oud-eau-de-parfum-1.jpg",
+          "/images/products/amber-oud-eau-de-parfum-2.jpg",
+          "/images/products/amber-oud-eau-de-parfum-3.jpg"
+        ],
+        "price": 345,
+        "inStock": true,
+        "createdAt": "2026-07-02",
+        "popularity": 79,
+        "attributes": {
+          "Volume": "100ml"
+        },
+        "keywords": [
+          "perfume",
+          "cologne",
+          "parfum",
+          "oud",
+          "mens perfume",
+          "fragrance",
+          "scent"
+        ]
+      },
+      {
+        "id": "p-023",
+        "slug": "ivory-jasmine-eau-de-parfum",
+        "name": "Ivory Jasmine Eau de Parfum",
+        "departmentId": "dep-fragrance",
+        "description": "White floral jasmine. Retail boxed 100ml.",
+        "imageUrls": [
+          "/images/products/ivory-jasmine-eau-de-parfum-1.jpg",
+          "/images/products/ivory-jasmine-eau-de-parfum-2.jpg",
+          "/images/products/ivory-jasmine-eau-de-parfum-3.jpg"
+        ],
+        "price": 345,
+        "inStock": true,
+        "createdAt": "2026-04-18",
+        "popularity": 58,
+        "attributes": {
+          "Volume": "100ml"
+        },
+        "keywords": [
+          "perfume",
+          "parfum",
+          "womens perfume",
+          "jasmine",
+          "floral",
+          "fragrance",
+          "scent"
+        ]
+      },
+      {
+        "id": "p-024",
+        "slug": "woven-storage-basket",
+        "name": "Woven Storage Basket",
+        "departmentId": "dep-household-home",
+        "description": "Open weave basket for market runs and laundry.",
+        "imageUrls": [
+          "/images/products/woven-storage-basket-1.jpg",
+          "/images/products/woven-storage-basket-2.jpg",
+          "/images/products/woven-storage-basket-3.jpg"
+        ],
+        "price": 180,
+        "inStock": true,
+        "createdAt": "2026-02-09",
+        "popularity": 54,
+        "attributes": {
+          "Material": "Rattan"
+        },
+        "keywords": [
+          "laundry basket",
+          "storage basket",
+          "rattan",
+          "hamper",
+          "basket"
+        ]
+      },
+      {
+        "id": "p-025",
+        "slug": "ceramic-serving-bowl-set",
+        "name": "Ceramic Serving Bowl Set",
+        "departmentId": "dep-household-kitchen",
+        "description": "Set of stoneware bowls. Dishwasher safe.",
+        "imageUrls": [
+          "/images/products/ceramic-serving-bowl-set-1.jpg",
+          "/images/products/ceramic-serving-bowl-set-2.jpg",
+          "/images/products/ceramic-serving-bowl-set-3.jpg"
+        ],
+        "price": 145,
+        "compareAtPrice": 175,
+        "inStock": true,
+        "createdAt": "2026-01-20",
+        "popularity": 49,
+        "attributes": {
+          "Set": "3 pieces"
+        },
+        "tags": [
+          "sale"
+        ],
+        "keywords": [
+          "serving bowls",
+          "dishes",
+          "tableware",
+          "stoneware",
+          "kitchen"
+        ]
+      },
+      {
+        "id": "p-026",
+        "slug": "bamboo-kitchen-utensil-set",
+        "name": "Bamboo Kitchen Utensil Set",
+        "departmentId": "dep-household-kitchen",
+        "description": "Spoon, spatula and ladle in one bundle.",
+        "imageUrls": [
+          "/images/products/bamboo-kitchen-utensil-set-1.jpg",
+          "/images/products/bamboo-kitchen-utensil-set-2.jpg",
+          "/images/products/bamboo-kitchen-utensil-set-3.jpg"
+        ],
+        "price": 95,
+        "inStock": true,
+        "createdAt": "2026-02-22",
+        "popularity": 52,
+        "attributes": {
+          "Set": "4 pieces"
+        },
+        "keywords": [
+          "kitchen tools",
+          "cooking utensils",
+          "spatula",
+          "spoon",
+          "kitchen"
+        ]
+      },
+      {
+        "id": "p-027",
+        "slug": "linen-tea-towels",
+        "name": "Linen Tea Towels",
+        "departmentId": "dep-household-kitchen",
+        "description": "Pair of linen towels. Soften after the first wash.",
+        "imageUrls": [
+          "/images/products/linen-tea-towels-1.jpg",
+          "/images/products/linen-tea-towels-2.jpg",
+          "/images/products/linen-tea-towels-3.jpg"
+        ],
+        "price": 75,
+        "inStock": true,
+        "createdAt": "2026-03-05",
+        "popularity": 48,
+        "attributes": {
+          "Pack": "2"
+        },
+        "keywords": [
+          "kitchen towels",
+          "dish towels",
+          "tea towel",
+          "linen",
+          "kitchen"
+        ]
+      },
+      {
+        "id": "p-028",
+        "slug": "lavender-laundry-soap-bar",
+        "name": "Lavender Laundry Soap Bar",
+        "departmentId": "dep-household-home",
+        "description": "Solid laundry soap with lavender. UK goods.",
+        "imageUrls": [
+          "/images/products/lavender-laundry-soap-bar-1.jpg",
+          "/images/products/lavender-laundry-soap-bar-2.jpg",
+          "/images/products/lavender-laundry-soap-bar-3.jpg"
+        ],
+        "price": 32,
+        "inStock": true,
+        "createdAt": "2026-06-12",
+        "popularity": 50,
+        "attributes": {
+          "Weight": "200g"
+        },
+        "keywords": [
+          "laundry soap",
+          "detergent",
+          "washing soap",
+          "laundry bar",
+          "soap"
+        ]
+      }
+    ]
+  },
+  "examples": {
+    "createOrderRequest": {
+      "customerId": "cust-ama",
+      "customer": {
+        "name": "Ama Mensah",
+        "phone": "233241234567",
+        "email": "ama@example.com",
+        "region": "Greater Accra",
+        "city": "Accra",
+        "address": "14 Boundary Road, East Legon",
+        "mapsUrl": "https://maps.app.goo.gl/example",
+        "notes": "Call on arrival"
+      },
+      "lines": [
+        {
+          "productId": "p-001",
+          "variantId": "v-001-5",
+          "slug": "golden-basmati-rice",
+          "quantity": 1,
+          "name": "Golden Basmati Rice",
+          "price": 189,
+          "imageUrl": "/images/products/golden-basmati-rice-1.jpg",
+          "attributes": {
+            "Weight": "5kg"
+          }
+        }
+      ],
+      "subtotal": 189,
+      "shipping": 25,
+      "total": 214
+    },
+    "createOrderResponse": {
+      "reference": "HUBTEL-ABC123",
+      "orderId": "73262",
+      "trackingNumber": "RK-73262",
+      "paymentReference": "HUBTEL-ABC123"
+    },
+    "trackingLookup": {
+      "url": "GET /orders/track/RK-73262",
+      "note": "Demo tracking number for QA"
+    }
+  },
+  "implementationPhases": [
+    {
+      "phase": 1,
+      "name": "Catalog + orders",
+      "endpoints": "All /catalog/* and /orders/*"
+    },
+    {
+      "phase": 2,
+      "name": "Auth + customer state",
+      "endpoints": "/auth/*, /customer/*"
+    },
+    {
+      "phase": 3,
+      "name": "Payments",
+      "note": "Hubtel/MoMo on admin side; replace storefront demo payment step"
+    }
+  ],
+  "storefrontWiringStatus": {
+    "wired": [
+      "catalog",
+      "orders",
+      "checkout"
+    ],
+    "httpClientExistsNotWired": [
+      "customer",
+      "saved"
+    ],
+    "alwaysLocal": [
+      "cart"
+    ],
+    "notImplemented": [
+      "contact",
+      "newsletter"
+    ]
+  },
+  "buildPromptFile": "docs/portal-build-prompt.md",
+  "storefrontRequirements": {
+    "summary": "The storefront does NOT call separate endpoints for \"new arrivals\", \"on sale\", or \"mega menu\". It uses a small set of catalog endpoints with query params. The API must return complete Product and Department objects so the storefront can render badges, filters, and navigation without extra round-trips.",
+    "fullCatalogDump": {
+      "required": true,
+      "call": "GET /catalog/products (no query params)",
+      "usedBy": [
+        "getMegaMenu() in src/lib/catalog/index.ts — builds department mega menu, On sale menu, and New arrivals menu",
+        "layout.tsx — passes mega menu to Navbar on every page",
+        "product/[slug]/page.tsx — static path generation"
+      ],
+      "note": "Portal must return ALL products in one response (28 in seed; scale with pagination later if needed). Storefront currently expects the full list."
+    },
+    "features": [
+      {
+        "feature": "All categories / departments",
+        "storefrontCall": "GET /catalog/departments",
+        "apiMustReturn": "Full flat array of 18 departments (parentId tree). Sorted by sortOrder.",
+        "seedIncluded": true
+      },
+      {
+        "feature": "Department listing with sub-category roll-up",
+        "storefrontCall": "GET /catalog/products?department={slug}",
+        "apiMustReturn": "Products in that department AND all child sub-departments (e.g. department=pantry includes rice-grains, oils, dairy). Mock uses descendantIds().",
+        "seedIncluded": true
+      },
+      {
+        "feature": "Home — department cards with counts",
+        "storefrontCall": "GET /catalog/products?department={rootSlug} per root",
+        "apiMustReturn": "total count per root department (includes children)"
+      },
+      {
+        "feature": "Home — New arrivals rail",
+        "storefrontCall": "GET /catalog/products?sort=newest",
+        "apiMustReturn": "Products sorted by createdAt descending. Top 8 shown.",
+        "badgeLogic": "ProductCard also shows \"New\" badge when tags includes \"new\" (4 products in seed)"
+      },
+      {
+        "feature": "Shop — On sale filter",
+        "storefrontCall": "GET /catalog/products?sale=1",
+        "apiMustReturn": "Products where compareAtPrice > price. Storefront sale badge uses same rule. Optional: also include tags containing \"sale\".",
+        "seedIncluded": "3 products with compareAtPrice; several also have tags: [\"sale\"]"
+      },
+      {
+        "feature": "Shop — In stock filter",
+        "storefrontCall": "GET /catalog/products?stock=1",
+        "apiMustReturn": "Products where inStock === true"
+      },
+      {
+        "feature": "Shop — Sort options",
+        "storefrontCall": "GET /catalog/products?sort={key}",
+        "sortKeys": {
+          "featured": "popularity desc, then in-stock first",
+          "newest": "createdAt desc",
+          "popularity": "popularity desc",
+          "price-asc": "price asc",
+          "price-desc": "price desc"
+        },
+        "note": "Default when omitted: featured"
+      },
+      {
+        "feature": "Shop — Search",
+        "storefrontCall": "GET /catalog/products?q={term} or GET /catalog/search?q={term}&limit=6",
+        "apiMustReturn": "Ranked matches on name, keywords, tags, brand, description, SKU, department names. Search dialog uses /catalog/search; shop page uses listProducts with q.",
+        "seedIncluded": "Each product has keywords[] for synonyms (perfume, rice, shoes, etc.)"
+      },
+      {
+        "feature": "Sale / New badges on product cards",
+        "storefrontLogic": "Sale: compareAtPrice > price. New: tags includes \"new\". No extra API fields.",
+        "fieldsRequired": [
+          "price",
+          "compareAtPrice",
+          "tags",
+          "inStock",
+          "createdAt"
+        ]
+      },
+      {
+        "feature": "Mega menu — On sale & New arrivals tabs",
+        "storefrontLogic": "Client builds from full product list + departments (buildPromoMegaMenu). Sale: compareAtPrice > price, sorted by discount %. Newest: createdAt desc.",
+        "optionalFutureEndpoint": "GET /catalog/mega-menu — not required if full catalog dump works"
+      },
+      {
+        "feature": "Product detail page",
+        "storefrontCall": "GET /catalog/products/:slug",
+        "apiMustReturn": "Full Product with variants[], imageUrls[], attributes, description"
+      },
+      {
+        "feature": "Variant picker (size, weight, colour)",
+        "storefrontLogic": "Client-side from product.variants[]. API must return complete variants with id, sku, attributes, price, stock, optional imageUrls"
+      },
+      {
+        "feature": "Related products",
+        "storefrontCall": "GET /catalog/products/:slug/related?limit=4",
+        "apiMustReturn": "Same department first, then others. Exclude current product."
+      },
+      {
+        "feature": "Price bounds (future filters)",
+        "storefrontCall": "GET /catalog/products response.bounds.min/max",
+        "apiMustReturn": "Min/max price across catalog (or filtered set). UI not wired yet but type expects it."
+      }
+    ],
+    "productFieldsRequired": {
+      "always": [
+        "id",
+        "slug",
+        "name",
+        "departmentId",
+        "description",
+        "imageUrls",
+        "price",
+        "inStock",
+        "createdAt",
+        "attributes"
+      ],
+      "forFullExperience": [
+        "compareAtPrice — sale badges and ?sale=1 filter",
+        "popularity — featured sort and mega menu ordering",
+        "tags — \"new\" badge (values: \"new\", \"sale\")",
+        "keywords — search ranking",
+        "brand",
+        "variants — multi-SKU products (10 of 28 in seed)"
+      ]
+    },
+    "seedDataCompleteness": {
+      "departments": {
+        "count": 18,
+        "location": "seedData.departments in this file + src/data/departments.json"
+      },
+      "products": {
+        "count": 28,
+        "location": "seedData.products in this file + src/data/products.json",
+        "withVariants": 10,
+        "withCompareAtPrice": 3,
+        "withTagNew": 4,
+        "withTagSale": 3,
+        "outOfStock": 1,
+        "note": "This IS the full current product database. Portal should seed exactly this, then allow CRUD."
+      }
+    },
+    "notSeparateEndpoints": [
+      "No /catalog/new-arrivals — use ?sort=newest",
+      "No /catalog/on-sale — use ?sale=1",
+      "No /collections — departments only",
+      "No /catalog/mega-menu — computed client-side from departments + all products"
+    ]
+  }
+}

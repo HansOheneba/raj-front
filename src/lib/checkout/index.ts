@@ -1,3 +1,4 @@
+import { isApiEnabled } from "@/lib/api";
 import { httpCreateOrder } from "./http";
 import { mockCreateOrder } from "./mock";
 
@@ -8,6 +9,6 @@ export type {
   CreateOrderResult,
 } from "./types";
 
-const createOrderImpl = process.env.NEXT_PUBLIC_API_URL ? httpCreateOrder : mockCreateOrder;
+const createOrderImpl = isApiEnabled ? httpCreateOrder : mockCreateOrder;
 
 export const createOrder = createOrderImpl;

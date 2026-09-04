@@ -10,10 +10,19 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { ApiError, isApiEnabled } from "@/lib/api";
 import { normalizeMapsUrl } from "@/lib/customer/maps";
 import { isValidCity } from "@/lib/customer/locations";
 import { isValidGhanaRegion } from "@/lib/customer/regions";
-import { parseGhanaPhone } from "@/lib/phone";
+import { requestAuthCodeAction, verifyAuthCodeAction, completeProfileAction, logoutAction } from "@/lib/customer/auth-actions";
+import {
+  createAddress as createAddressApi,
+  deleteAddress as deleteAddressApi,
+  getCustomer as getCustomerApi,
+  listAddresses as listAddressesApi,
+  updateAddress as updateAddressApi,
+} from "@/lib/customer/http";
+import { parseGhanaPhone, toApiPhone } from "@/lib/phone";
 import { hashOtp, OTP_MAX_ATTEMPTS, OTP_TTL_MS, normalizeOtp, randomOtp } from "@/lib/customer/otp";
 import {
   hashesMatch,
@@ -52,11 +61,11 @@ type CustomerContextValue = {
   requestCode: (input: RequestCodeInput) => Promise<RequestCodeResult>;
   verifyCode: (phone: string, code: string) => Promise<VerifyCodeResult>;
   completeProfile: (input: { name: string }) => Promise<AuthResult>;
-  addAddress: (input: AddressInput) => AuthResult;
-  updateAddress: (id: string, input: AddressInput) => AuthResult;
-  removeAddress: (id: string) => void;
-  setDefaultAddress: (id: string) => void;
-  signOut: () => void;
+  addAddress: (input: AddressInput) => Promise<AuthResult>;
+  updateAddress: (id: string, input: AddressInput) => Promise<AuthResult>;
+  removeAddress: (id: string) => Promise<void>;
+  setDefaultAddress: (id: string) => Promise<void>;
+  signOut: () => Promise<void>;
   authOpen: boolean;
   authReason: AuthReason;
   requestAuth: (reason: AuthReason) => boolean;
@@ -110,6 +119,23 @@ function findCustomerByPhone(phone: string) {
   return readCustomers().find((row) => row.phone === phone);
 }
 
+async function loadApiSession(
+  setCustomer: (customer: Customer | null) => void,
+  setAddresses: (addresses: CustomerAddress[]) => void,
+) {
+  try {
+    const me = await getCustomerApi();
+    setCustomer(me);
+    const saved = await listAddressesApi();
+    setAddresses(saved);
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 401) {
+      setCustomer(null);
+      setAddresses([]);
+    }
+  }
+}
+
 export function CustomerProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [customer, setCustomer] = useState<Customer | null>(null);
@@ -120,6 +146,11 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
   const verifiedPhoneRef = useRef<string | null>(null);
 
   useEffect(() => {
+    if (isApiEnabled) {
+      void loadApiSession(setCustomer, setAddresses).finally(() => setReady(true));
+      return;
+    }
+
     const sessionId = readSessionId();
     if (sessionId) {
       const match = readCustomers().find((row) => row.id === sessionId);
@@ -149,6 +180,29 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const requestCode = useCallback(async (input: RequestCodeInput): Promise<RequestCodeResult> => {
+    if (isApiEnabled) {
+      const phone = toApiPhone(input.phone);
+      if (!phone) return { ok: false, message: "Enter a valid phone number." };
+
+      let profile: { name: string } | undefined;
+      if (input.profile) {
+        const validated = validateName(input.profile.name);
+        if (!validated.ok) return validated;
+        profile = { name: validated.name };
+      }
+
+      try {
+        const response = await requestAuthCodeAction({ phone, profile });
+        verifiedPhoneRef.current = phone;
+        return { ok: true, code: response.demoCode ?? response.code };
+      } catch (error) {
+        return {
+          ok: false,
+          message: error instanceof Error ? error.message : "Could not send a code. Try again.",
+        };
+      }
+    }
+
     const phone = normalizePhone(input.phone);
     if (!phone) return { ok: false, message: "Enter a valid phone number." };
 
@@ -179,6 +233,39 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const verifyCode = useCallback(async (phone: string, code: string): Promise<VerifyCodeResult> => {
+    if (isApiEnabled) {
+      const apiPhone = toApiPhone(phone) ?? verifiedPhoneRef.current;
+      if (!apiPhone) {
+        return { ok: false, message: "Enter a valid phone number." };
+      }
+
+      const otp = normalizeOtp(code);
+      if (otp.length !== 6) {
+        return { ok: false, message: "Enter the 6-digit code." };
+      }
+
+      try {
+        const result = await verifyAuthCodeAction(apiPhone, otp);
+        if (!result.ok) return result;
+        if (result.needsProfile) {
+          verifiedPhoneRef.current = apiPhone;
+          return { ok: true, needsProfile: true };
+        }
+
+        const nextCustomer = result.customer ?? (await getCustomerApi());
+        setCustomer(nextCustomer);
+        setAddresses(await listAddressesApi());
+        setAuthOpen(false);
+        verifiedPhoneRef.current = null;
+        return { ok: true };
+      } catch (error) {
+        return {
+          ok: false,
+          message: error instanceof Error ? error.message : "That code doesn't match. Try again.",
+        };
+      }
+    }
+
     const normalizedPhone = normalizePhone(phone);
     if (!normalizedPhone) {
       return { ok: false, message: "Enter a valid phone number." };
@@ -230,10 +317,27 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
   }, [persistCustomer]);
 
   const completeProfile = useCallback(async (input: { name: string }): Promise<AuthResult> => {
-    const phone = verifiedPhoneRef.current;
-    if (!phone) return { ok: false, message: "Request a new code and try again." };
     const profile = validateName(input.name);
     if (!profile.ok) return profile;
+
+    if (isApiEnabled) {
+      try {
+        const { customer: nextCustomer } = await completeProfileAction(profile.name);
+        setCustomer(nextCustomer);
+        setAddresses(await listAddressesApi());
+        setAuthOpen(false);
+        verifiedPhoneRef.current = null;
+        return { ok: true };
+      } catch (error) {
+        return {
+          ok: false,
+          message: error instanceof Error ? error.message : "Could not save your name. Try again.",
+        };
+      }
+    }
+
+    const phone = verifiedPhoneRef.current;
+    if (!phone) return { ok: false, message: "Request a new code and try again." };
     persistCustomer({
       id: crypto.randomUUID(),
       name: profile.name,
@@ -252,10 +356,28 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
   );
 
   const addAddress = useCallback(
-    (input: AddressInput): AuthResult => {
+    async (input: AddressInput): Promise<AuthResult> => {
       if (!customer) return { ok: false, message: "Sign in to save an address." };
       const result = validateAddress(input);
       if (!result.ok) return result;
+
+      if (isApiEnabled) {
+        try {
+          await createAddressApi({
+            ...result.address,
+            isDefault: addresses.length === 0 || result.address.isDefault,
+          });
+          const saved = await listAddressesApi();
+          setAddresses(saved);
+          return { ok: true };
+        } catch (error) {
+          return {
+            ok: false,
+            message: error instanceof Error ? error.message : "Could not save that address.",
+          };
+        }
+      }
+
       const isFirst = addresses.length === 0;
       const nextItem: CustomerAddress = {
         ...result.address,
@@ -265,55 +387,123 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
       const next = nextItem.isDefault
         ? [nextItem, ...addresses.map((item) => ({ ...item, isDefault: false }))]
         : [...addresses, nextItem];
-      persistAddresses(next);
-      return { ok: true };
+      try {
+        persistAddresses(next);
+        return { ok: true };
+      } catch {
+        return { ok: false, message: "Could not save that address. Try again." };
+      }
     },
     [addresses, customer, persistAddresses],
   );
 
   const updateAddress = useCallback(
-    (id: string, input: AddressInput): AuthResult => {
+    async (id: string, input: AddressInput): Promise<AuthResult> => {
       if (!customer) return { ok: false, message: "Sign in to save an address." };
       const result = validateAddress(input);
       if (!result.ok) return result;
       const current = addresses.find((item) => item.id === id);
       if (!current) return { ok: false, message: "That address is no longer saved." };
+
+      if (isApiEnabled) {
+        try {
+          await updateAddressApi(id, {
+            ...result.address,
+            isDefault: result.address.isDefault || current.isDefault,
+          });
+          const saved = await listAddressesApi();
+          setAddresses(saved);
+          return { ok: true };
+        } catch (error) {
+          return {
+            ok: false,
+            message: error instanceof Error ? error.message : "Could not update that address.",
+          };
+        }
+      }
+
       const nextItem: CustomerAddress = {
         ...result.address,
         id,
         isDefault: result.address.isDefault || current.isDefault,
       };
-      persistAddresses(
-        addresses.map((item) => {
-          if (item.id === id) return nextItem;
-          return nextItem.isDefault ? { ...item, isDefault: false } : item;
-        }),
-      );
-      return { ok: true };
+      try {
+        persistAddresses(
+          addresses.map((item) => {
+            if (item.id === id) return nextItem;
+            return nextItem.isDefault ? { ...item, isDefault: false } : item;
+          }),
+        );
+        return { ok: true };
+      } catch {
+        return { ok: false, message: "Could not update that address. Try again." };
+      }
     },
     [addresses, customer, persistAddresses],
   );
 
   const removeAddress = useCallback(
-    (id: string) => {
+    async (id: string) => {
+      if (!customer) return;
+
+      if (isApiEnabled) {
+        try {
+          await deleteAddressApi(id);
+        } catch {
+          return;
+        }
+      }
+
       const remaining = addresses.filter((item) => item.id !== id);
       if (remaining.length > 0 && !remaining.some((item) => item.isDefault)) {
         remaining[0] = { ...remaining[0], isDefault: true };
       }
+
+      if (isApiEnabled) {
+        setAddresses(remaining);
+        return;
+      }
+
       persistAddresses(remaining);
     },
-    [addresses, persistAddresses],
+    [addresses, customer, persistAddresses],
   );
 
   const setDefaultAddress = useCallback(
-    (id: string) => {
+    async (id: string) => {
+      if (!customer) return;
+
+      if (isApiEnabled) {
+        try {
+          const updated = await updateAddressApi(id, { isDefault: true });
+          setAddresses(
+            addresses.map((item) => ({
+              ...item,
+              isDefault: item.id === updated.id,
+            })),
+          );
+        } catch {
+          return;
+        }
+        return;
+      }
+
       persistAddresses(addresses.map((item) => ({ ...item, isDefault: item.id === id })));
     },
-    [addresses, persistAddresses],
+    [addresses, customer, persistAddresses],
   );
 
-  const signOut = useCallback(() => {
-    writeSessionId(null);
+  const signOut = useCallback(async () => {
+    if (isApiEnabled) {
+      try {
+        await logoutAction();
+      } catch {
+        // Clear local state even if logout fails.
+      }
+    } else {
+      writeSessionId(null);
+    }
+
     setCustomer(null);
     setAddresses([]);
     challengeRef.current = null;
